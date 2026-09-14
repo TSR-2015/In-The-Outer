@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solar Sentinel - Heliophysics Command</title>
+    
+    <!-- Google Fonts: Inter for minimalist sans-serif typography, Share Tech Mono for telemetry -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Three.js Canvas Container -->
+    <div id="canvas-container"></div>
+    
+    <!-- Minimalist Mute Toggle -->
+    <button id="audio-toggle" class="audio-btn ui-element" aria-label="Toggle Sound">
+      <span id="audio-text">SOUND: ON</span>
+    </button>
+
+    <!-- LOADING SCREEN -->
+    <section id="loading-screen" class="ui-screen active">
+      <div class="loading-container">
+        <h1 class="minimal-title">SOLAR SENTINEL</h1>
+        <p class="minimal-subtitle">SYSTEM BOOT SEQUENCE</p>
+        <div class="progress-bar-container">
+          <div id="loading-progress-bar" class="progress-bar" style="width: 0%"></div>
+        </div>
+        <div class="progress-details">
+          <span id="loading-status">LOADING TELEMETRY...</span>
+          <span id="loading-percent">0%</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAIN MENU -->
+    <section id="main-menu" class="ui-screen">
+      <div class="menu-content">
+        <h1 class="logo-text">SOLAR SENTINEL</h1>
+        <p class="tagline">HELIOPHYSICAL RESEARCH SIMULATOR</p>
+        
+        <div class="menu-buttons">
+          <button id="btn-start" class="menu-btn primary-btn">START SIMULATION</button>
+          <button id="btn-howto" class="menu-btn">USER MANUAL</button>
+          <button id="btn-credits" class="menu-btn">CREDITS</button>
+        </div>
+      </div>
+      <div class="menu-footer">
+        <span>NASA RESEARCH DATA INTEGRATION</span>
+      </div>
+    </section>
+
+    <!-- MISSION PROGRESS SCREEN -->
+    <section id="mission-progress-screen" class="ui-screen">
+      <div class="progress-screen-container minimal-panel">
+        <h2 class="panel-header text-center">MISSION PROGRESS / CONTROL</h2>
+        
+        <div class="overall-progress-section font-mono">
+          <div class="overall-labels">
+            <span>CAMPAIGN PROGRESS:</span>
+            <span id="overall-progress-text">0%</span>
+          </div>
+          <div class="progress-bar-container">
+            <div id="overall-progress-fill" class="progress-bar" style="width: 0%"></div>
+          </div>
+          <div class="completed-missions-count">
+            Completed: <span id="completed-missions-val">0 / 5</span>
+          </div>
+        </div>
+
+        <div id="mission-cards-list" class="mission-cards-list">
+          <!-- Populated dynamically via UIManager -->
+        </div>
+
+        <div class="progress-footer">
+          <button id="btn-progress-back" class="brief-btn back">MAIN MENU</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SATELLITE PROCUREMENT (SELECT 1 OF 3) -->
+    <section id="satellite-selection" class="ui-screen">
+      <div class="selection-container">
+        <h2 class="selection-title">PROBE PROCUREMENT</h2>
+        <p class="selection-instructions">SELECT ONE (1) PROBE CORE FOR DEPLOYMENT</p>
+        
+        <div id="satellite-grid" class="satellite-grid">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+        <div class="selection-footer">
+          <button id="btn-selection-back" class="brief-btn back">BACK TO MENU</button>
+          <button id="btn-launch-sequence" class="brief-btn next disabled" disabled>LAUNCH PROBE</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAIN MISSION CONTROL DASHBOARD -->
+    <section id="mission-dashboard" class="ui-screen">
+      <div class="dashboard-grid">
+        
+        <!-- Left Panel: Probe Stats & Readings -->
+        <aside class="dashboard-panel panel-left minimal-panel">
+          <div class="panel-header">PROBE STATUS</div>
+          
+          <div class="telemetry-box">
+            <h3 id="dashboard-sat-name" class="sat-name">HELIOS EXPLORER</h3>
+            
+            <div class="telemetry-row">
+              <span>ORBIT STATUS:</span>
+              <span id="stat-orbit-sector" class="highlight">STABLE ORBIT</span>
+            </div>
+            <div class="telemetry-row">
+              <span>VELOCITY:</span>
+              <span id="stat-velocity">-- km/s</span>
+            </div>
+            <div class="telemetry-row">
+              <span>DISTANCE:</span>
+              <span id="stat-distance">-- AU</span>
+            </div>
+            
+            <div class="stat-progress-section">
+              <div class="label-box">
+                <span>SYSTEM INTEGRITY</span>
+                <span id="stat-health-val">100%</span>
+              </div>
+              <div class="stat-progress-bar"><div id="stat-health-fill" class="progress-bar-fill" style="width: 100%"></div></div>
+            </div>
+
+            <div class="stat-progress-section">
+              <div class="label-box">
+                <span>BATTERY LEVEL</span>
+                <span id="stat-battery-val">100%</span>
+              </div>
+              <div class="stat-progress-bar"><div id="stat-battery-fill" class="progress-bar-fill" style="width: 100%"></div></div>
+            </div>
+
+            <div class="stat-progress-section">
+              <div class="label-box">
+                <span>SIGNAL FLOW</span>
+                <span id="stat-signal-val">100%</span>
+              </div>
+              <div class="stat-progress-bar"><div id="stat-signal-fill" class="progress-bar-fill" style="width: 100%"></div></div>
+            </div>
+          </div>
+
+          <!-- Bottom: Camera View selectors -->
+          <div class="camera-panel">
+            <div class="panel-header">CAMERA ANGLE</div>
+            <div class="camera-controls">
+              <button id="cam-free" class="cam-btn active">FREE CAM</button>
+              <button id="cam-follow" class="cam-btn">PROBE CAM</button>
+              <button id="cam-sun" class="cam-btn">SUN CAM</button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Center Section: HUD overlays & Primary Capture Buttons -->
+        <main class="dashboard-center">
+          <header class="dashboard-header minimal-panel">
+            <div class="header-logo">SOLAR SENTINEL // CTRL</div>
+            <div class="header-stats">
+              <div class="mission-timer-box">
+                <span>TIME:</span>
+                <span id="mission-timer">00:00.00</span>
+              </div>
+              <div class="mission-score-box">
+                <span>SCORE:</span>
+                <span id="mission-score">00000</span>
+              </div>
+            </div>
+          </header>
+
+          <!-- Primary Capture Button center bottom -->
+          <div class="action-dock">
+            <button id="cmd-capture" class="capture-btn">CAPTURE PHOTO</button>
+          </div>
+        </main>
+
+        <!-- Right Panel: Captured Photos (Top-Right) & Numerical telemetry (Middle) -->
+        <aside class="dashboard-panel panel-right minimal-panel">
+          
+          <!-- Top Right: Photo Reel Container -->
+          <div class="photo-reel-panel">
+            <div class="panel-header">CAPTURED SUN PHOTOGRAPHS</div>
+            <div class="photo-reel" id="sat-1-photos">
+              <div class="photo-placeholder">NO PHOTOS CAPTURED</div>
+            </div>
+          </div>
+
+          <!-- Middle Right: Numerical Data Telemetry (Temperatures & solar wind) -->
+          <div class="numerical-data-panel">
+            <div class="panel-header">STELLAR SENSOR DATA</div>
+            
+            <div class="science-objectives">
+              <div class="science-group">
+                <div class="objective-header">
+                  <span>PHOTO STUDY PROGRESS</span>
+                  <span id="objective-1-percent">0%</span>
+                </div>
+                <div class="science-progress-bar"><div id="objective-1-fill" class="science-fill" style="width: 0%"></div></div>
+              </div>
+
+              <div class="science-group">
+                <div class="objective-header">
+                  <span>SOLAR TEMPERATURE</span>
+                  <span id="stat-temp-val">-- K</span>
+                </div>
+                <div class="science-progress-bar"><div id="objective-2-fill" class="science-fill" style="width: 0%"></div></div>
+              </div>
+
+              <div class="science-group">
+                <div class="objective-header">
+                  <span>SOLAR RADIATION</span>
+                  <span id="stat-wind-val">-- W/m²</span>
+                </div>
+                <div class="science-progress-bar"><div id="objective-3-fill" class="science-fill" style="width: 0%"></div></div>
+              </div>
+              <div class="science-group">
+                <div class="objective-header"><span>DISTANCE FROM SUN</span><span id="stat-distance-sun">-- AU</span></div>
+                <div class="objective-header"><span>SOLAR ACTIVITY</span><span id="stat-solar-activity">--</span></div>
+              </div>
+            </div>
+
+            <!-- INTERACTIVE TIMING SLIDER MINIGAME FOR DATA CAPTURE -->
+            <div class="timing-slider-panel">
+              <div class="objective-header font-mono">
+                <span>DATA CAPTURE TIMING SLIDER</span>
+              </div>
+              <div class="timing-slider-track">
+                <div id="timing-target-zone" class="timing-target-zone"></div>
+                <div id="timing-pointer" class="timing-pointer"></div>
+              </div>
+              <button id="cmd-capture-slider" class="capture-slider-btn">CAPTURE DATA</button>
+              <div id="timing-status" class="timing-status font-mono">ALIGN BLACK POINTER WITH GREY ZONE</div>
+            </div>
+          </div>
+
+          <!-- Bottom Right: SVG charts in grayscale -->
+          <div class="chart-panel">
+            <div class="chart-header">REAL-TIME SPECTROMETRY</div>
+            <div class="chart-canvas-container">
+              <svg id="telemetry-chart" viewBox="0 0 300 120" preserveAspectRatio="none">
+                <g id="chart-grid" stroke="rgba(0,0,0,0.06)" stroke-width="1"></g>
+                <path id="chart-path-rad" fill="none" stroke="#000000" stroke-width="1.5" d=""/>
+                <path id="chart-path-mag" fill="none" stroke="#777777" stroke-width="1.5" stroke-dasharray="3,3" d=""/>
+                <path id="chart-path-wind" fill="none" stroke="#cccccc" stroke-width="1.5" d=""/>
+              </svg>
+            </div>
+          </div>
+        </aside>
+
+      </div>
+    </section>
+
+    <!-- MISSION COMPLETE SCREEN (MINIMALIST RECOVERY PANEL) -->
+    <section id="mission-complete-screen" class="ui-screen">
+      <div class="menu-content">
+        <h1 class="logo-text">DATA TELEMETRY SECURED</h1>
+        <p class="tagline">STELLAR EXPEDITION SUCCESSFULLY CONCLUDED</p>
+        
+        <div class="complete-stats font-mono">
+          <div class="stat-box">
+            <div class="stat-label">TOTAL TIME</div>
+            <div id="summary-time" class="stat-value">00:00</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">IMAGES RECORDED</div>
+            <div id="summary-images" class="stat-value">5 / 5</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">FINAL SCORE</div>
+            <div id="summary-score" class="stat-value">00000</div>
+          </div>
+        </div>
+
+        <div class="complete-buttons" style="display: flex; gap: 15px; width: 100%; margin-top: 30px;">
+          <button id="btn-complete-missions" class="menu-btn primary-btn" style="flex: 1;">CONTINUE TO MISSIONS TAB</button>
+          <button id="btn-complete-restart" class="menu-btn" style="flex: 1;">RESTART MISSION</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="solar-capture-flash" aria-hidden="true"></div>
+
+    <!-- PHOTO VIEWER & SAVER MODAL -->
+    <div id="photo-viewer-modal" class="modal">
+      <div class="modal-content minimal-panel">
+        <h2 class="panel-header">STELLAR PHOTOGRAPH PREVIEW</h2>
+        <div class="photo-viewer-container">
+          <!-- Double resolution preview canvas -->
+          <canvas id="viewer-canvas" width="400" height="400"></canvas>
+        </div>
+        <div class="photo-viewer-meta font-mono">
+          <div>FILE: <span id="viewer-filename">--</span></div>
+          <div>TIMESTAMP: <span id="viewer-timestamp">--</span></div>
+          <div id="viewer-observation-data">SOLAR OBSERVATION: --</div>
+        </div>
+        <div class="modal-actions">
+          <button id="btn-viewer-close" class="brief-btn back">CLOSE</button>
+          <button id="btn-viewer-save" class="brief-btn next">SAVE IMAGE (PNG)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- USER MANUAL MODAL -->
+    <div id="howto-modal" class="modal">
+      <div class="modal-content minimal-panel">
+        <h2 class="panel-header">USER MANUAL</h2>
+        <div class="modal-body">
+          <p><strong>1. DEPLOY SATELLITE:</strong> Procurement begins on startup. Select exactly one (1) probe class to enter Heliocentric orbit.</p>
+          <p><strong>2. SUN PHOTOGRAPHY:</strong> Click the primary <strong>"CAPTURE PHOTO"</strong> button at the bottom center to command the probe to take a spectral photograph of the Sun. Captured thumbnails will appear in the top-right corner.</p>
+          <p><strong>3. PREVIEW & SAVE:</strong> Click on any captured thumbnail to preview it. Press <strong>"SAVE IMAGE"</strong> inside the viewer to download the image file directly to your system.</p>
+          <p><strong>4. DATA TELEMETRY:</strong> Telemetry indicators will gather temperature readings and solar wind speeds automatically. Complete all objectives to finalize the mission.</p>
+        </div>
+        <button id="btn-howto-close" class="brief-btn back">DISMISS</button>
+      </div>
+    </div>
+
+    <!-- CREDITS MODAL -->
+    <div id="credits-modal" class="modal">
+      <div class="modal-content minimal-panel">
+        <h2 class="panel-header">CREDITS</h2>
+        <div class="modal-body text-center">
+          <p><strong>SOLAR SENTINEL REDESIGN</strong></p>
+          <p>A minimalist black-and-white heliophysics command simulation.</p>
+          <p>Built using Three.js, GSAP path animations, and Web Audio synthesizers.</p>
+        </div>
+        <button id="btn-credits-close" class="brief-btn back">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- EARTH-MOON HUD OVERLAY -->
+    <div id="earth-moon-hud" class="hud-overlay hidden font-mono">
+      <div class="hud-panel left-panel minimal-panel">
+        <div class="panel-header">SPACECRAFT TELEMETRY</div>
+        <div class="telemetry-item">
+          <span class="label">STAGE:</span>
+          <span id="em-hud-stage" class="value highlight">LAUNCH STATION</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="label">ALTITUDE:</span>
+          <span id="em-hud-altitude" class="value">0 km</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="label">VELOCITY:</span>
+          <span id="em-hud-velocity" class="value">0.0 km/s</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="label">FUEL:</span>
+          <span id="em-hud-fuel" class="value">100%</span>
+        </div>
+        <div class="stat-progress-bar">
+          <div id="em-hud-fuel-fill" class="progress-bar-fill" style="width: 100%"></div>
+        </div>
+      </div>
+
+      <div class="hud-panel center-panel minimal-panel">
+        <div class="clock-display" id="em-hud-clock">00:00.00</div>
+        <div class="objective-display text-center">
+          <span class="label">CURRENT OBJECTIVE:</span>
+          <div id="em-hud-objective" class="value">Awaiting Launch sequence...</div>
+        </div>
+        <div class="progress-bar-container" style="height: 10px; margin-top: 10px;">
+          <div id="em-hud-progress-fill" class="progress-bar" style="width: 0%; height: 100%;"></div>
+        </div>
+        <div class="progress-percent text-center font-mono" id="em-hud-progress-pct" style="margin-top: 5px;">0%</div>
+      </div>
+    </div>
+
+    <!-- EARTH-MOON QUIZ / MODAL -->
+    <div id="earth-moon-quiz-modal" class="modal">
+      <div class="modal-content minimal-panel quiz-panel">
+        <h2 class="panel-header" id="em-quiz-title">MISSION QUESTION CHECKPOINT</h2>
+        <div class="quiz-question font-mono" id="em-quiz-question" style="margin: 15px 0; font-size: 1.1rem; line-height: 1.4;">
+          Loading question...
+        </div>
+        <div class="quiz-options" id="em-quiz-options" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+          <!-- Populated dynamically via JS -->
+        </div>
+        <div class="quiz-feedback font-mono hidden" id="em-quiz-feedback" style="margin-bottom: 15px; padding: 10px; border: var(--border-thin);">
+          Feedback here...
+        </div>
+        <div class="modal-actions" id="em-quiz-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
+          <!-- Action buttons -->
+        </div>
+      </div>
+    </div>
+    
+    <!-- MARS ROVER HUD OVERLAY (MISSION 3) -->
+    <div id="mars-hud" class="hud-overlay hidden font-mono">
+      <!-- Top Left: Mission Title -->
+      <div class="hud-panel left-panel minimal-panel" style="top: 25px; width: 340px;">
+        <div class="panel-header">MISSION 03 // MARS CLIMATE EXPLORER</div>
+        <div class="telemetry-item">
+          <span class="label">CURRENT REGION:</span>
+          <span id="mars-hud-region" class="value highlight">ROCKY PLAIN</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="label">ROVER BATTERY:</span>
+          <span id="mars-hud-battery" class="value">100%</span>
+        </div>
+        <div class="stat-progress-bar">
+          <div id="mars-hud-battery-fill" class="progress-bar-fill" style="width: 100%"></div>
+        </div>
+        <div class="telemetry-item" style="margin-top: 8px;">
+          <span class="label">VELOCITY:</span>
+          <span id="mars-hud-speed" class="value">0.0 m/s</span>
+        </div>
+      </div>
+
+      <!-- Top Right: Environmental & Climate Readouts -->
+      <div class="hud-panel panel-right minimal-panel" style="top: 25px; right: 20px; width: 300px;">
+        <div class="panel-header">MARS CLIMATE TELEMETRY</div>
+        <div class="telemetry-item">
+          <span class="label">SURFACE TEMP:</span>
+          <span id="mars-hud-temp" class="value highlight">-63°C</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="label">WIND VELOCITY:</span>
+          <span id="mars-hud-wind" class="value">18 km/h</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="label">DUST INTENSITY:</span>
+          <span id="mars-hud-dust" class="value">MODERATE</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="label">SURFACE RAD:</span>
+          <span id="mars-hud-rad" class="value">0.42 mSv/h</span>
+        </div>
+
+        <!-- Minimap Canvas Container -->
+        <div class="minimap-container" style="margin-top: 10px; text-align: center; border: var(--border-thin); background: #000; padding: 5px;">
+          <div style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 4px;">EXPLORATION MINIMAP</div>
+          <canvas id="mars-minimap-canvas" width="160" height="160" style="display: inline-block;"></canvas>
+        </div>
+      </div>
+
+      <!-- Bottom Center: Objective Display & Survey Progress -->
+      <div class="hud-panel center-panel minimal-panel" style="bottom: 20px; width: 480px;">
+        <div class="objective-display text-center">
+          <span class="label">PRIMARY MISSION OBJECTIVE:</span>
+          <div id="mars-hud-objective" class="value highlight">Explore Martian terrain & collect climate samples</div>
+        </div>
+        <div class="progress-bar-container" style="height: 10px; margin-top: 8px;">
+          <div id="mars-hud-progress-fill" class="progress-bar" style="width: 0%; height: 100%;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.75rem;">
+          <span>PHOTOS: <strong id="mars-stat-photos">0/3</strong></span>
+          <span>SAMPLES: <strong id="mars-stat-samples">0/3</strong></span>
+          <span>SCANS: <strong id="mars-stat-scans">1/3</strong></span>
+          <span>REGIONS: <strong id="mars-stat-regions">1/4</strong></span>
+        </div>
+      </div>
+
+      <!-- Bottom Right: Keyboard Controls Helper Panel -->
+      <div class="hud-panel" style="bottom: 20px; left: 20px; width: 260px; background: rgba(255,255,255,0.92); border: var(--border-thin); padding: 12px; font-size: 0.75rem; line-height: 1.5;">
+        <div style="font-weight: 800; border-bottom: 1px solid #000; margin-bottom: 6px; padding-bottom: 2px;">ROVER CONTROLS</div>
+        <div>[W/S] Drive Forward / Reverse</div>
+        <div>[A/D] Steer Left / Right</div>
+        <div>[SHIFT] Rocket Boost</div>
+        <div>[SPACE] Emergency Brake</div>
+        <div>[P] Capture Scientific Photo</div>
+        <div>[E] Collect Soil/Sand Sample</div>
+        <div>[M] Toggle Climate Data Log</div>
+      </div>
+    </div>
+
+    <!-- MARS CLIMATE & SURVEY DATA MODAL (M key) -->
+    <div id="mars-data-modal" class="modal">
+      <div class="modal-content minimal-panel" style="max-width: 600px;">
+        <h2 class="panel-header">MARS CLIMATE SURVEY & SAMPLE INVENTORY</h2>
+        <div id="mars-data-body" class="modal-body font-mono" style="max-height: 380px; overflow-y: auto;">
+          <!-- Populated dynamically via JS -->
+        </div>
+        <div class="modal-actions">
+          <button id="btn-mars-data-close" class="brief-btn back">CLOSE DATA LOG</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MARS ROVER CAMERA VIEWFINDER OVERLAY (P key) -->
+    <div id="mars-camera-viewfinder" class="hud-overlay hidden font-mono" style="pointer-events: none; z-index: 120; border: 12px solid rgba(0,0,0,0.85); background: transparent;">
+      <div style="position: absolute; top: 25px; left: 25px; color: #22c55e; font-size: 0.85rem; background: rgba(0,0,0,0.7); padding: 8px 14px; border: 1px solid #22c55e;">
+        <div>REC ● MARS CAM [SOL 142]</div>
+        <div>BATTERY: <span id="viewfinder-battery">94%</span> | TEMP: <span id="viewfinder-temp">-63°C</span></div>
+        <div id="viewfinder-mode-label" style="color: #38bdf8; font-weight: bold; margin-top: 2px;">MODE: ATMOSPHERIC SKY CLIMATE SURVEY</div>
+      </div>
+      
+      <!-- Viewfinder Reticle & Grid Lines -->
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; height: 280px; border: 1px dashed rgba(34, 197, 94, 0.6); pointer-events: none;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; border: 2px solid #22c55e; border-radius: 50%;"></div>
+        <div style="position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: rgba(34, 197, 94, 0.4);"></div>
+        <div style="position: absolute; top: 0; left: 50%; width: 1px; height: 100%; background: rgba(34, 197, 94, 0.4);"></div>
+      </div>
+
+      <!-- Action Prompt Banner -->
+      <div style="position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); border: 2px solid #22c55e; color: #fff; padding: 12px 28px; text-align: center; border-radius: 4px; pointer-events: auto;">
+        <div style="font-weight: 800; font-size: 1.1rem; color: #22c55e; margin-bottom: 4px;" id="viewfinder-prompt-title">PRESS [ENTER] TO CAPTURE PHOTOGRAPH</div>
+        <div style="font-size: 0.8rem; color: #cbd5e1;" id="viewfinder-prompt-sub">Target aligned in viewfinder. Press [ESC] or [P] to exit camera view.</div>
+      </div>
+    </div>
+
+    <!-- MARS ROVER TEST TUBE SAMPLING PROMPT OVERLAY (E key) -->
+    <div id="mars-arm-prompt" class="hud-overlay hidden font-mono" style="pointer-events: none; z-index: 120;">
+      <div style="position: absolute; top: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 2px solid #10b981; color: #fff; padding: 14px 30px; text-align: center; pointer-events: auto;">
+        <div style="font-weight: 900; font-size: 1.1rem; color: #10b981; margin-bottom: 4px;">TEST TUBE ROBOTIC SAMPLER ACTIVE</div>
+        <div style="font-size: 0.85rem; color: #e2e8f0;" id="arm-prompt-desc">CLICK A GREEN-BORDERED SOIL REGION TO SCOOP SAMPLE INTO TEST TUBE</div>
+        <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Press [E] or [ESC] to exit sampling view.</div>
+      </div>
+    </div>
+
+    <!-- DISCOVERY TOAST BANNER -->
+    <div id="mars-discovery-toast" class="modal hidden" style="background: rgba(0,0,0,0.5);">
+      <div class="modal-content minimal-panel text-center font-mono" style="border: 2px solid #f59e0b; background: #000; color: #fff;">
+        <h2 id="discovery-toast-title" style="color: #f59e0b; margin-bottom: 10px;">★ NEW DISCOVERY DETECTED ★</h2>
+        <div id="discovery-toast-desc" style="font-size: 0.95rem; line-height: 1.5; margin-bottom: 15px;">
+          Discovery details here...
+        </div>
+        <button id="btn-discovery-dismiss" class="brief-btn next">LOG DISCOVERY</button>
+      </div>
+    </div>
+
+    <!-- 2D CARTOON CUTSCENE OVERLAY -->
+    <div id="cutscene-overlay" class="modal hidden">
+      <div class="cutscene-wrapper font-mono">
+        <canvas id="cutscene-canvas" width="800" height="450"></canvas>
+        <div id="cutscene-caption" class="cutscene-caption">ORBITAL INSERTION // SATELLITE DEPLOYMENT SEQUENCE</div>
+      </div>
+    </div>
+    
+    <!-- CAMERA FLASH ANIMATION OVERLAY -->
+    <div id="mars-camera-flash" style="position: fixed; inset: 0; background: #ffffff; z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 0.25s ease-out;"></div>
+
+    <!-- JS main entry -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

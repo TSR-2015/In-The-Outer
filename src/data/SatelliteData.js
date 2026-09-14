@@ -1,0 +1,50 @@
+export const SatellitesList = [
+  {
+    id: "parker-solar-probe",
+    name: "PARKER SOLAR PROBE",
+    class: "HELIOPHYSICS PROBE",
+    camera: "WISPR IMAGER",
+    heatShield: "CARBON-CARBON (1500°C)",
+    battery: "LI-ION / SOLAR PANEL",
+    instruments: "FIELDS, SWEAP, ISOIS, WISPR",
+    health: 100,
+    speed: 95.0,
+    transmissionRate: 15.0,
+    specialAbility: "CLOSE APPROACH: Flies extremely close to the Sun.",
+    perk: "snapshot",
+    orbitRadius: 36.0,
+    orbitSpeed: 0.9
+  },
+  {
+    id: "satellite",
+    name: "SATELLITE RESEARCH PROBE",
+    class: "OBSERVATORY TYPE",
+    camera: "EUV IMAGER & CORONAGRAPH",
+    heatShield: "MLI HEAT SHIELD",
+    battery: "HIGH CAPACITY SOLAR GRID",
+    instruments: "LASCO, EIT, CELIAS, MDI",
+    health: 100,
+    speed: 45.0,
+    transmissionRate: 45.0,
+    specialAbility: "DEEP SPACE DATA: Faster transmission rate.",
+    perk: "thermal",
+    orbitRadius: 82.0,
+    orbitSpeed: 0.35
+  },
+  {
+    id: "solar-probe",
+    name: "SOLAR ORBITER PROBE",
+    class: "CORONAL RESEARCH PROBE",
+    camera: "PHI HIGH-RES IMAGER",
+    heatShield: "TI-HEAT SHIELD (520°C)",
+    battery: "ORIENTABLE SOLAR ARRAYS",
+    instruments: "EUI, METIS, SPICE, PHI",
+    health: 100,
+    speed: 65.0,
+    transmissionRate: 30.0,
+    specialAbility: "POLAR MAPPING: Records high-inclination solar data.",
+    perk: "wind",
+    orbitRadius: 42.0,
+    orbitSpeed: 0.7
+  }
+];

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Mission Control // Handheld Controller</title>
+  <title>IN THE OUTER // Handheld Controller</title>
   
   <!-- Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,179 +13,259 @@
   <link rel="stylesheet" href="/src/style.css">
   <link rel="stylesheet" href="/src/controller/controller.css">
 </head>
-<body>
-  <!-- CONTROLLER ENCLOSURE -->
-  <main class="controller-enclosure">
-    <!-- TOP SLIM PROFILE & HARDWARE PAUSE BAR -->
-    <header class="controller-header">
-      <div class="profile-pod">
-        <div id="player-avatar" class="avatar-badge">--</div>
-        <div class="profile-info">
-          <div class="profile-name">
-            <span id="player-name-display">CONNECTING...</span>
-            <span id="player-master-badge" class="badge-master hidden">
-              <svg class="ui-icon star-gold" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              MASTER
-            </span>
-          </div>
-          <div class="profile-sub">
-            <span id="player-number-display">INITIALIZING PILOT</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Live Mode Indicator Pill -->
-      <div class="controller-center-status">
-        <div id="controller-mode-pill" class="controller-mode-pill mode-drive">DRIVE</div>
-      </div>
-
-      <!-- Telemetry & Pause Pod -->
-      <div class="controller-right-pod">
-        <div class="telemetry-pod">
-          <div class="connection-status">
-            <span id="connection-led" class="led-indicator"></span>
-            <span id="connection-label">CONNECTING</span>
-          </div>
-          <div class="room-tag">ROOM: <strong id="room-code-display">----</strong></div>
-        </div>
-        <!-- Hardware Pause Button -->
-        <button id="btn-controller-pause" class="controller-pause-btn font-mono" title="Pause Game" aria-label="Pause Game">
-          <span class="ctrl-pause-icon">
-            <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-              <rect x="6" y="4" width="4" height="16" rx="1"/>
-              <rect x="14" y="4" width="4" height="16" rx="1"/>
-            </svg>
+<body class="controller-body">
+  <!-- TOP PERSISTENT STATUS STRIP (AirConsole: non-competing fixed status) -->
+  <header class="ctrl-top-strip">
+    <div class="ctrl-strip-left">
+      <div id="player-avatar" class="ctrl-avatar">--</div>
+      <div class="ctrl-meta">
+        <div class="ctrl-player-line">
+          <span id="player-name-display">PILOT LINK</span>
+          <span id="player-host-badge" class="ctrl-host-badge hidden">
+            <svg class="ui-icon star-gold" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            HOST
           </span>
-        </button>
+          <span id="player-spectator-badge" class="ctrl-spectator-badge hidden">SPECTATOR</span>
+        </div>
+        <div id="player-slot-display" class="ctrl-slot-text">CONNECTING...</div>
       </div>
-    </header>
+    </div>
 
-    <!-- MAIN HARDWARE CONTROLS DECK (FULL ERGONOMIC CANVAS) -->
-    <section class="controls-deck">
-      <div class="gamepad-split">
-        <!-- LEFT: MOLDED TACTILE D-PAD -->
-        <div class="dpad-well">
-          <div class="dpad-cross" id="dpad-cross">
-            <button class="dpad-btn up" id="dpad-up" data-dir="up" aria-label="Up">
-              <svg class="ui-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-            </button>
-            <button class="dpad-btn down" id="dpad-down" data-dir="down" aria-label="Down">
-              <svg class="ui-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-            </button>
-            <button class="dpad-btn left" id="dpad-left" data-dir="left" aria-label="Left">
-              <svg class="ui-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-            </button>
-            <button class="dpad-btn right" id="dpad-right" data-dir="right" aria-label="Right">
-              <svg class="ui-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-            </button>
-            <div class="dpad-center"></div>
-          </div>
+    <div class="ctrl-strip-right">
+      <div class="ctrl-net-badge">
+        <span id="connection-led" class="ctrl-led"></span>
+        <span id="connection-label" class="font-mono">LINKING</span>
+      </div>
+      <div class="ctrl-room-pill font-mono">ROOM: <strong id="room-code-display">----</strong></div>
+      <!-- Hardware pause button (only enabled during active mission) -->
+      <button id="btn-hardware-pause" class="ctrl-pause-btn hidden" title="Pause Game" aria-label="Pause Game">
+        <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="6" y="4" width="4" height="16" rx="1"/>
+          <rect x="14" y="4" width="4" height="16" rx="1"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- VIEW CONTAINER (ONE VIEW VISIBLE AT A TIME) -->
+  <main class="ctrl-view-container" id="ctrl-view-container">
+
+    <!-- VIEW 1: JOIN VIEW -->
+    <section id="view-join" class="ctrl-view active">
+      <div class="ctrl-join-card">
+        <div class="ctrl-join-header">
+          <div class="ctrl-badge-brand">IN THE OUTER</div>
+          <h1 class="ctrl-join-title">HANDHELD CONTROLLER</h1>
+          <p class="ctrl-join-sub">PAIR WITH BIG SCREEN TO PILOT MISSIONS</p>
         </div>
 
-        <!-- RIGHT: BEVELED ACTION BUTTONS A, B, C -->
-        <div class="action-cluster">
-          <!-- Button A: Photo Mode (Red) -->
-          <div class="button-well btn-pos-a btn-a" id="well-a">
-            <button class="action-cap" id="btn-action-a" data-action="photo" aria-label="Button A Photo">
-              <span class="action-label-letter">A</span>
-              <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-              <span class="action-sub-label">PHOTO</span>
-            </button>
+        <form id="auth-form" class="ctrl-join-form">
+          <div class="ctrl-field">
+            <label for="roomcode-input" class="ctrl-label">ROOM CODE</label>
+            <input type="text" id="roomcode-input" class="ctrl-input font-mono" placeholder="7K4P" maxlength="4" autocomplete="off" style="text-transform: uppercase;" required>
           </div>
 
-          <!-- Button B: Sample Mode (Blue) -->
-          <div class="button-well btn-pos-b btn-b" id="well-b">
-            <button class="action-cap" id="btn-action-b" data-action="sample" aria-label="Button B Sample">
-              <span class="action-label-letter">B</span>
-              <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31L4.67 18.2A2 2 0 0 0 6.4 21h11.2a2 2 0 0 0 1.73-2.8L14 9.31V2"/><line x1="8.5" x2="15.5" y1="2" y2="2"/></svg>
-              <span class="action-sub-label">SAMPLE</span>
-            </button>
+          <div class="ctrl-field">
+            <label for="username-input" class="ctrl-label">PILOT CODENAME</label>
+            <input type="text" id="username-input" class="ctrl-input" placeholder="e.g. JEEVAN" maxlength="12" autocomplete="off" required>
           </div>
 
-          <!-- Button C: Enter / Confirm (Green) -->
-          <div class="button-well btn-pos-c btn-c" id="well-c">
-            <button class="action-cap" id="btn-action-c" data-action="confirm" aria-label="Button C Action">
-              <span class="action-label-letter">C</span>
-              <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-              <span class="action-sub-label">ACTION</span>
-            </button>
+          <!-- Color Swatch Picker -->
+          <div class="ctrl-field">
+            <label class="ctrl-label">ROVER HUD COLOR</label>
+            <div class="ctrl-color-picker" id="ctrl-color-picker">
+              <button type="button" class="ctrl-color-swatch selected" data-color="#00f0ff" style="--swatch-color: #00f0ff;"></button>
+              <button type="button" class="ctrl-color-swatch" data-color="#ff0055" style="--swatch-color: #ff0055;"></button>
+              <button type="button" class="ctrl-color-swatch" data-color="#ffe600" style="--swatch-color: #ffe600;"></button>
+              <button type="button" class="ctrl-color-swatch" data-color="#00ff66" style="--swatch-color: #00ff66;"></button>
+              <button type="button" class="ctrl-color-swatch" data-color="#a855f7" style="--swatch-color: #a855f7;"></button>
+              <button type="button" class="ctrl-color-swatch" data-color="#ff7700" style="--swatch-color: #ff7700;"></button>
+            </div>
+          </div>
+
+          <button type="submit" id="btn-auth-join" class="game-btn btn-primary btn-lg ctrl-btn-block">CONNECT CONTROLLER</button>
+          <div id="auth-error-msg" class="ctrl-error-msg"></div>
+        </form>
+      </div>
+    </section>
+
+    <!-- VIEW 2: LOBBY / READY VIEW -->
+    <section id="view-lobby" class="ctrl-view">
+      <div class="ctrl-lobby-card">
+        <div class="ctrl-lobby-user-pod">
+          <div id="lobby-user-avatar" class="ctrl-lobby-avatar">PL</div>
+          <h2 id="lobby-user-name" class="ctrl-lobby-name">PILOT</h2>
+          <div id="lobby-user-status-text" class="ctrl-lobby-sub font-mono">CONNECTED TO ROOM</div>
+        </div>
+
+        <div class="ctrl-lobby-actions">
+          <!-- Ready Toggle Button -->
+          <button id="btn-toggle-ready" class="game-btn btn-secondary btn-lg ctrl-btn-block font-mono">
+            <span id="ready-toggle-icon">
+              <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <span id="ready-toggle-text">SET READY</span>
+          </button>
+
+          <!-- Host-Only Controls -->
+          <div id="host-controls-block" class="ctrl-host-controls hidden">
+            <div class="ctrl-host-label font-mono">HOST MISSION LAUNCHER</div>
+            <div class="ctrl-host-mission-picker">
+              <button id="btn-host-launch-mars" class="game-btn btn-primary ctrl-btn-block">
+                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                START MARS ROVER MISSION
+              </button>
+              <div class="ctrl-host-sub-actions">
+                <button id="btn-host-nav-missions" class="game-btn btn-outline btn-sm">MISSIONS CONSOLE</button>
+                <button id="btn-host-nav-home" class="game-btn btn-outline btn-sm">RETURN HOME</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Non-Host Waiting Banner -->
+          <div id="non-host-waiting-block" class="ctrl-waiting-banner">
+            <div class="ctrl-spinner-dot"></div>
+            <span>WAITING FOR HOST TO START MISSION...</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- SLIM BOTTOM MASTER DOCK (ONLY SHOWN FOR MASTER WHEN NOT DRIVING) -->
-    <footer id="master-dock" class="master-nav-dock locked hidden">
-      <div class="master-dock-header">
-        <span style="display: inline-flex; align-items: center; gap: 4px;">
-          <svg class="ui-icon star-gold" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          MASTER REMOTE COMMAND
-        </span>
-        <span id="master-dock-status">ACTIVE</span>
+    <!-- VIEW 3: MISSION CONTROL VIEW (Registered Per Mission: Mars Rover D-Pad + Actions) -->
+    <section id="view-mission" class="ctrl-view">
+      <!-- Active Driver Gamepad Deck -->
+      <div id="driver-gamepad-deck" class="controls-deck">
+        <div class="gamepad-split">
+          <!-- LEFT THUMB REST: MOLDED TACTILE D-PAD -->
+          <div class="dpad-well">
+            <div class="dpad-cross" id="dpad-cross">
+              <button class="dpad-btn up" id="dpad-up" data-dir="up" aria-label="Up">
+                <svg class="ui-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+              </button>
+              <button class="dpad-btn down" id="dpad-down" data-dir="down" aria-label="Down">
+                <svg class="ui-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <button class="dpad-btn left" id="dpad-left" data-dir="left" aria-label="Left">
+                <svg class="ui-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              </button>
+              <button class="dpad-btn right" id="dpad-right" data-dir="right" aria-label="Right">
+                <svg class="ui-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+              <div class="dpad-center"></div>
+            </div>
+          </div>
+
+          <!-- RIGHT THUMB REST: BEVELED ACTION BUTTONS A, B, C -->
+          <div class="action-cluster">
+            <!-- Button A: Photo Mode -->
+            <div class="button-well btn-pos-a btn-a" id="well-a">
+              <button class="action-cap" id="btn-action-a" data-action="photo" aria-label="Button A Photo">
+                <span class="action-label-letter">A</span>
+                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                <span class="action-sub-label">PHOTO</span>
+              </button>
+            </div>
+
+            <!-- Button B: Sample Mode -->
+            <div class="button-well btn-pos-b btn-b" id="well-b">
+              <button class="action-cap" id="btn-action-b" data-action="sample" aria-label="Button B Sample">
+                <span class="action-label-letter">B</span>
+                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31L4.67 18.2A2 2 0 0 0 6.4 21h11.2a2 2 0 0 0 1.73-2.8L14 9.31V2"/><line x1="8.5" x2="15.5" y1="2" y2="2"/></svg>
+                <span class="action-sub-label">SAMPLE</span>
+              </button>
+            </div>
+
+            <!-- Button C: Enter / Confirm Action -->
+            <div class="button-well btn-pos-c btn-c" id="well-c">
+              <button class="action-cap" id="btn-action-c" data-action="confirm" aria-label="Button C Action">
+                <span class="action-label-letter">C</span>
+                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                <span class="action-sub-label">ACTION</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode Pill & Live HUD Bar -->
+        <div class="ctrl-mode-hud">
+          <div id="controller-mode-pill" class="controller-mode-pill mode-drive font-mono">DRIVE</div>
+          <div id="lcd-status-msg" class="ctrl-lcd-msg font-mono">WATCH BIG SCREEN FOR ROVER POSITION</div>
+        </div>
       </div>
-      <div class="master-btn-row">
-        <button class="master-hardware-btn" id="btn-master-home">HOME</button>
-        <button class="master-hardware-btn" id="btn-master-missions">MISSIONS</button>
-        <button class="master-hardware-btn" id="btn-master-mars">MARS</button>
-        <button class="master-hardware-btn" id="btn-master-start">START</button>
+
+      <!-- Spectator Overlay / Deck (Shown when player is spectating) -->
+      <div id="spectator-deck" class="ctrl-spectator-deck hidden">
+        <div class="ctrl-spec-card">
+          <div class="ctrl-spec-radar">
+            <svg class="ui-icon text-cyan-400" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m12 2 4 10-4-3-4 3 4-10z"/></svg>
+          </div>
+          <h2 class="ctrl-spec-title">SPECTATING MISSION</h2>
+          <p class="ctrl-spec-sub">LIVE TELEMETRY STREAM LINKED TO BIG SCREEN</p>
+          <div class="ctrl-spec-stats">
+            <div class="ctrl-spec-stat-item">
+              <span class="ctrl-stat-label font-mono">CURRENT MISSION</span>
+              <strong class="ctrl-stat-val font-mono">MARS ROVER // RECON</strong>
+            </div>
+            <div class="ctrl-spec-stat-item">
+              <span class="ctrl-stat-label font-mono">ACTIVE ROVERS</span>
+              <strong class="ctrl-stat-val font-mono">2 UNITS DEPLOYED</strong>
+            </div>
+          </div>
+          <p class="ctrl-spec-hint font-mono">You will enter as driver in the next round.</p>
+        </div>
       </div>
-    </footer>
+    </section>
+
+    <!-- VIEW 4: PAUSED VIEW -->
+    <section id="view-paused" class="ctrl-view">
+      <div class="ctrl-paused-card">
+        <div class="ctrl-pause-badge">
+          <svg class="ui-icon" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="6" y="4" width="4" height="16" rx="1"/>
+            <rect x="14" y="4" width="4" height="16" rx="1"/>
+          </svg>
+        </div>
+        <h2 class="ctrl-pause-title">MISSION PAUSED</h2>
+        <p id="pause-status-sub" class="ctrl-pause-sub">SIMULATION SUSPENDED BY HOST</p>
+
+        <!-- Host controls for resume/exit -->
+        <div id="host-pause-actions" class="ctrl-pause-actions hidden">
+          <button id="btn-pause-resume" class="game-btn btn-primary btn-lg ctrl-btn-block">
+            <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+            RESUME MISSION
+          </button>
+          <button id="btn-pause-exit" class="game-btn btn-outline btn-md ctrl-btn-block" style="margin-top: 10px;">
+            EXIT TO LOBBY
+          </button>
+        </div>
+
+        <!-- Non-host view -->
+        <div id="client-pause-waiting" class="ctrl-waiting-banner" style="margin-top: 20px;">
+          <div class="ctrl-spinner-dot"></div>
+          <span>WAITING FOR HOST TO RESUME...</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 5: RESULTS VIEW -->
+    <section id="view-results" class="ctrl-view">
+      <div class="ctrl-results-card">
+        <div id="result-trophy-icon" class="ctrl-result-trophy">
+          <svg class="ui-icon text-amber-400" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+          </svg>
+        </div>
+        <h2 id="result-headline" class="ctrl-result-title">MISSION COMPLETE</h2>
+        <div class="ctrl-result-score-block">
+          <span class="ctrl-stat-label font-mono">YOUR SCORE</span>
+          <strong id="result-score-val" class="ctrl-result-points font-mono">0</strong>
+          <span class="ctrl-stat-label font-mono">PTS</span>
+        </div>
+        <button id="btn-result-return" class="game-btn btn-primary btn-lg ctrl-btn-block" style="margin-top: 24px;">RETURN TO LOBBY</button>
+      </div>
+    </section>
+
   </main>
-
-  <!-- CONTROLLER PAUSE OVERLAY -->
-  <div id="controller-pause-overlay" class="controller-modal-overlay hidden">
-    <div class="controller-pause-card">
-      <div class="ctrl-pause-badge">
-        <svg class="ui-icon" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-          <rect x="6" y="4" width="4" height="16" rx="1"/>
-          <rect x="14" y="4" width="4" height="16" rx="1"/>
-        </svg>
-      </div>
-      <h2 class="ctrl-pause-title">SIMULATION PAUSED</h2>
-      <p class="ctrl-pause-sub">MISSION TEMPORARILY SUSPENDED</p>
-      <button id="btn-controller-resume" class="game-btn btn-primary btn-lg" style="margin-top: 18px; width: 100%;">
-        <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 3 20 12 6 21 6 3"/></svg>
-        RESUME SIMULATION
-      </button>
-    </div>
-  </div>
-
-  <!-- USER REGISTRATION / USERNAME OVERLAY -->
-  <div id="auth-modal" class="controller-modal-overlay">
-    <div class="auth-panel">
-      <h1 class="auth-title">MISSION CONTROL</h1>
-      <p class="auth-subtitle">AIRCONSOLE REMOTE PILOT LINK</p>
-
-      <form id="auth-form">
-        <div class="auth-field-group">
-          <label for="username-input" class="auth-label">ENTER PILOT CODENAME</label>
-          <input type="text" id="username-input" class="auth-input" placeholder="e.g. JEEVAN" maxlength="12" autocomplete="off" required>
-        </div>
-
-        <div class="auth-field-group">
-          <label for="roomcode-input" class="auth-label">4-CHARACTER ROOM CODE</label>
-          <input type="text" id="roomcode-input" class="auth-input" placeholder="7K4P" maxlength="4" style="text-transform: uppercase;" required>
-        </div>
-
-        <button type="submit" id="btn-auth-join" class="game-btn btn-primary btn-lg" style="width: 100%; margin-top: 16px;">CONNECT CONTROLLER</button>
-        <div id="auth-error-msg" class="auth-status-msg"></div>
-      </form>
-    </div>
-  </div>
-
-  <!-- RESULT OVERLAY (WIN / LOSE) -->
-  <div id="result-modal" class="controller-modal-overlay hidden">
-    <div id="result-card" class="result-card">
-      <div id="result-title" class="result-title win">YOU WIN!</div>
-      <div id="result-trophy" class="result-trophy">
-        <svg class="ui-icon text-amber-400" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
-        </svg>
-      </div>
-      <div class="result-score">FINAL SCORE: <strong id="result-score-val">0</strong> PTS</div>
-      <button id="btn-result-dismiss" class="game-btn btn-primary" style="margin-top: 16px; width: 100%;">RETURN TO CONSOLE</button>
-    </div>
-  </div>
 
   <script type="module" src="/src/controller/controller.js"></script>
 </body>

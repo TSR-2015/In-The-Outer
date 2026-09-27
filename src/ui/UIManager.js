@@ -77,9 +77,17 @@ class UIManager {
     bindBtn('btn-mode-multi', () => {
       GameStateInstance.isMultiplayer = true;
       GameStateInstance.changeState('LOBBY');
+      MultiplayerInstance.setControllersView('LOBBY');
     });
-    bindBtn('btn-lobby-back', () => GameStateInstance.changeState('LANDING'));
-    bindBtn('btn-lobby-start', () => GameStateInstance.changeState('MARS_ROVER'));
+    bindBtn('btn-lobby-back', () => {
+      MultiplayerInstance.setControllersView('LOBBY');
+      GameStateInstance.changeState('LANDING');
+    });
+    bindBtn('btn-lobby-start', () => {
+      MultiplayerInstance.setActivePlayers(2);
+      MultiplayerInstance.setControllersView('MISSION_CONTROL', 'MARS_ROVER');
+      GameStateInstance.changeState('MARS_ROVER');
+    });
     bindBtn('btn-start', () => GameStateInstance.changeState('PROGRESS'));
     bindBtn('btn-howto', () => this.toggleModal('howto-modal', true));
     bindBtn('btn-credits', () => this.toggleModal('credits-modal', true));

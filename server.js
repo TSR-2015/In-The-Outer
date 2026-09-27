@@ -61,8 +61,17 @@ function saveUser(userData) {
 }
 
 // In-Memory Room Store
-// rooms[roomId] = { roomId, masterPlayerId, currentMission, players: [ { id, name, playerNumber, isMaster, score, rank, completed, connected, ws, socketId } ], bigScreenWs }
+// rooms[roomId] = { roomId, masterPlayerId, currentMission, screenState, activePlayerCount, players: [ ... ], bigScreenWs }
 const rooms = {};
+
+const DEFAULT_PALETTES = [
+  '#00f0ff', // Cyan (P1)
+  '#ff0055', // Neon Crimson / Magenta (P2)
+  '#ffe600', // Amber Gold (P3)
+  '#00ff66', // Emerald Green (P4)
+  '#a855f7', // Electric Violet (P5)
+  '#ff7700'  // Solar Flare Orange (P6)
+];
 
 function generateRoomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -238,6 +247,13 @@ async function startServer() {
           roomId: newCode,
           masterPlayerId: null,
           currentMission: 'LOBBY',
+          activePlayerCount: 2,
+          screenState: {
+            view: 'LANDING',
+            activeMission: null,
+            isPaused: false,
+            activePlayerCount: 2
+          },
           players: [],
           bigScreenWs: ws
         };
@@ -264,6 +280,19 @@ async function startServer() {
             type: 'ROOM_SYNC',
             roomId,
             room: serializeRoom(rooms[roomId])
+          });
+          sendToSocket(ws, {
+            type: 'SYNC_FULL_STATE',
+            roomId,
+            screenState: rooms[roomId].screenState,
+            masterPlayerId: rooms[roomId].masterPlayerId,
+            devices: rooms[roomId].players.map(p => ({
+              id: p.id,
+              playerNumber: p.playerNumber,
+              isHost: p.isMaster,
+              connected: p.connected,
+              state: p.state
+            }))
           });
         }
         break;
@@ -296,14 +325,36 @@ async function startServer() {
         ws.roomId = normalizedRoomId;
         ws.playerId = user.id;
 
-        // Check if player already exists in room (reconnect)
+        // Check if player already exists in room (reconnect or rehydrate within 60s)
         let player = targetRoom.players.find(p => p.id === user.id);
+        let isReconnection = false;
+
         if (player) {
+          isReconnection = true;
+          if (player.reconnectTimer) {
+            clearTimeout(player.reconnectTimer);
+            player.reconnectTimer = null;
+            console.log(`[Reconnection] Player ${user.name} canceled grace period timer.`);
+          }
           player.connected = true;
           player.ws = ws;
           player.name = user.name;
+          if (!player.state) {
+            player.state = {
+              playerName: user.name,
+              color: DEFAULT_PALETTES[(player.playerNumber - 1) % DEFAULT_PALETTES.length],
+              isReady: false,
+              view: targetRoom.currentMission === 'LOBBY' ? 'LOBBY' : 'MISSION_CONTROL',
+              isHost: player.isMaster,
+              role: player.playerNumber <= (targetRoom.activePlayerCount || 2) ? 'active' : 'spectator',
+              connected: true
+            };
+          } else {
+            player.state.connected = true;
+            player.state.playerName = user.name;
+          }
         } else {
-          // Assign player number (1, 2, ...)
+          // New player joining
           const playerNumber = targetRoom.players.length + 1;
           const isMaster = targetRoom.players.length === 0 || !targetRoom.masterPlayerId;
 
@@ -318,7 +369,17 @@ async function startServer() {
             connected: true,
             photoMode: false,
             sampleMode: false,
-            ws
+            ws,
+            reconnectTimer: null,
+            state: {
+              playerName: user.name,
+              color: payload.color || DEFAULT_PALETTES[(playerNumber - 1) % DEFAULT_PALETTES.length],
+              isReady: false,
+              view: targetRoom.currentMission === 'LOBBY' ? 'LOBBY' : 'MISSION_CONTROL',
+              isHost: isMaster,
+              role: playerNumber <= (targetRoom.activePlayerCount || 2) ? 'active' : 'spectator',
+              connected: true
+            }
           };
 
           targetRoom.players.push(player);
@@ -328,25 +389,174 @@ async function startServer() {
           }
         }
 
-        console.log(`[Player Joined]: ${user.name} (#${player.playerNumber}) in room ${roomId}. Master: ${player.isMaster}`);
+        console.log(`[Player Joined]: ${user.name} (#${player.playerNumber}) in room ${normalizedRoomId}. Host: ${player.isMaster}`);
 
         // Notify joined phone
         sendToSocket(ws, {
           type: 'JOIN_SUCCESS',
-          roomId,
+          roomId: normalizedRoomId,
+          isReconnection,
           player: serializePlayer(player),
           isMaster: player.isMaster,
+          isHost: player.isMaster,
           masterPlayerId: targetRoom.masterPlayerId,
           room: serializeRoom(targetRoom)
         });
 
+        // Send full replicated state snapshot for instant rehydration
+        sendToSocket(ws, {
+          type: 'SYNC_FULL_STATE',
+          roomId: normalizedRoomId,
+          screenState: targetRoom.screenState,
+          masterPlayerId: targetRoom.masterPlayerId,
+          devices: targetRoom.players.map(p => ({
+            id: p.id,
+            playerNumber: p.playerNumber,
+            isHost: p.isMaster,
+            connected: p.connected,
+            state: p.state
+          })),
+          selfState: player.state
+        });
+
         // Notify room (Big Screen & other players)
-        broadcastToRoom(roomId, {
-          type: 'PLAYER_JOINED',
+        broadcastToRoom(normalizedRoomId, {
+          type: isReconnection ? 'PLAYER_RECONNECTED' : 'PLAYER_JOINED',
           player: serializePlayer(player),
           room: serializeRoom(targetRoom)
         }, ws.socketId);
 
+        // Broadcast device state change diff
+        broadcastToRoom(normalizedRoomId, {
+          type: 'DEVICE_STATE_CHANGE',
+          deviceId: player.id,
+          playerNumber: player.playerNumber,
+          isScreen: false,
+          state: player.state,
+          diff: player.state
+        }, ws.socketId);
+
+        break;
+      }
+
+      // 4b. REPLICATED DEVICE STATE CHANGE (AirConsole Channel 2)
+      case 'SET_STATE': {
+        const room = rooms[roomId];
+        if (!room) return;
+        const player = room.players.find(p => p.id === playerId);
+        if (!player) return;
+
+        const diff = payload.state || msg.state || {};
+        player.state = { ...(player.state || {}), ...diff };
+
+        if (diff.playerName) {
+          player.name = diff.playerName;
+          saveUser({ id: player.id, name: diff.playerName });
+        }
+
+        // Broadcast diff and full device state to room
+        broadcastToRoom(roomId, {
+          type: 'DEVICE_STATE_CHANGE',
+          deviceId: player.id,
+          playerNumber: player.playerNumber,
+          isScreen: false,
+          state: player.state,
+          diff
+        });
+        break;
+      }
+
+      // 4c. SCREEN STATE CHANGE
+      case 'SET_SCREEN_STATE': {
+        const room = rooms[roomId];
+        if (!room) return;
+        const diff = payload.state || msg.state || {};
+        room.screenState = { ...(room.screenState || {}), ...diff };
+
+        broadcastToRoom(roomId, {
+          type: 'SCREEN_STATE_CHANGE',
+          state: room.screenState,
+          diff
+        });
+        break;
+      }
+
+      // 4d. MASS VIEW SWITCHING (e.g. Screen directs controllers to MISSION or LOBBY)
+      case 'SET_CONTROLLERS_VIEW': {
+        const room = rooms[roomId];
+        if (!room) return;
+        const targetView = payload.view || msg.view || 'LOBBY';
+        const missionId = payload.missionId || msg.missionId || null;
+
+        room.currentMission = targetView === 'LOBBY' ? 'LOBBY' : (missionId || 'MISSION');
+
+        room.players.forEach(p => {
+          if (p.state) {
+            p.state.view = targetView;
+            if (missionId) p.state.missionId = missionId;
+          }
+        });
+
+        broadcastToRoom(roomId, {
+          type: 'CONTROLLERS_VIEW_CHANGED',
+          view: targetView,
+          missionId,
+          room: serializeRoom(room)
+        });
+        break;
+      }
+
+      // 4e. ACTIVE PLAYERS CONFIGURATION (AirConsole setActivePlayers)
+      case 'SET_ACTIVE_PLAYERS': {
+        const room = rooms[roomId];
+        if (!room) return;
+
+        // Verify Host if sent by a controller
+        if (playerId && playerId !== room.masterPlayerId) {
+          sendToSocket(ws, {
+            type: 'ERROR',
+            code: 'UNAUTHORIZED_HOST',
+            message: 'Only the Host can configure active players count.'
+          });
+          return;
+        }
+
+        const count = parseInt(payload.count || msg.count || 2, 10);
+        room.activePlayerCount = count;
+        room.players.forEach((p, idx) => {
+          const role = (idx < count) ? 'active' : 'spectator';
+          if (p.state) {
+            p.state.role = role;
+          }
+        });
+
+        broadcastToRoom(roomId, {
+          type: 'ACTIVE_PLAYERS_CHANGED',
+          activePlayerCount: count,
+          players: room.players.map(serializePlayer)
+        });
+        break;
+      }
+
+      // 4f. DEVICE REQUESTS FULL STATE RE-SYNC
+      case 'REQUEST_FULL_SYNC': {
+        const room = rooms[roomId];
+        if (!room) return;
+        const player = room.players.find(p => p.id === playerId);
+        sendToSocket(ws, {
+          type: 'SYNC_FULL_STATE',
+          roomId,
+          screenState: room.screenState,
+          masterPlayerId: room.masterPlayerId,
+          devices: room.players.map(p => ({
+            id: p.id,
+            playerNumber: p.playerNumber,
+            isHost: p.isMaster,
+            connected: p.connected,
+            state: p.state
+          })),
+          selfState: player ? player.state : null
+        });
         break;
       }
 
@@ -569,11 +779,24 @@ async function startServer() {
         break;
       }
 
-      // 13. PAUSE / RESUME SIMULATION
+      // 13. PAUSE / RESUME SIMULATION (HOST ONLY IF FROM PHONE)
       case 'GAME_STATE_PAUSE': {
         const room = rooms[roomId];
         if (!room) return;
+
+        // If sent from a controller, must be Host
+        if (playerId && playerId !== room.masterPlayerId) {
+          sendToSocket(ws, {
+            type: 'ERROR',
+            code: 'UNAUTHORIZED_HOST',
+            message: 'Only the Host can pause the simulation.'
+          });
+          return;
+        }
+
         console.log(`[Simulation Paused] in room ${roomId}`);
+        if (room.screenState) room.screenState.isPaused = true;
+
         broadcastToRoom(roomId, {
           type: 'GAME_STATE_PAUSE',
           pausedBy: playerId || 'BIG_SCREEN'
@@ -584,9 +807,23 @@ async function startServer() {
       case 'GAME_STATE_RESUME': {
         const room = rooms[roomId];
         if (!room) return;
+
+        // If sent from a controller, must be Host
+        if (playerId && playerId !== room.masterPlayerId) {
+          sendToSocket(ws, {
+            type: 'ERROR',
+            code: 'UNAUTHORIZED_HOST',
+            message: 'Only the Host can resume the simulation.'
+          });
+          return;
+        }
+
         console.log(`[Simulation Resumed] in room ${roomId}`);
+        if (room.screenState) room.screenState.isPaused = false;
+
         broadcastToRoom(roomId, {
-          type: 'GAME_STATE_RESUME'
+          type: 'GAME_STATE_RESUME',
+          resumedBy: playerId || 'BIG_SCREEN'
         });
         break;
       }
@@ -619,16 +856,38 @@ async function startServer() {
     const player = room.players.find(p => p.id === ws.playerId);
     if (player) {
       player.connected = false;
-      console.log(`[Player Disconnected] ${player.name} from room ${roomId}`);
+      if (player.state) player.state.connected = false;
+      console.log(`[Player Disconnected] ${player.name} (${player.id}) from room ${roomId}. Starting 60s grace period.`);
 
-      // If Master disconnected, transfer Master to next active player
+      // Broadcast device state change to inform all devices immediately
+      broadcastToRoom(roomId, {
+        type: 'DEVICE_STATE_CHANGE',
+        deviceId: player.id,
+        playerNumber: player.playerNumber,
+        isScreen: false,
+        state: player.state,
+        diff: { connected: false }
+      });
+
+      broadcastToRoom(roomId, {
+        type: 'PLAYER_LEFT',
+        playerId: player.id,
+        playerNumber: player.playerNumber,
+        gracePeriodSeconds: 60,
+        room: serializeRoom(room)
+      });
+
+      // If Master disconnected, transfer Master to next active player if one exists
       if (player.isMaster) {
         player.isMaster = false;
+        if (player.state) player.state.isHost = false;
+
         const nextMaster = room.players.find(p => p.connected && p.id !== player.id);
         if (nextMaster) {
           nextMaster.isMaster = true;
+          if (nextMaster.state) nextMaster.state.isHost = true;
           room.masterPlayerId = nextMaster.id;
-          console.log(`[Master Transferred] to ${nextMaster.name}`);
+          console.log(`[Master Transferred] to ${nextMaster.name} due to host disconnect`);
 
           broadcastToRoom(roomId, {
             type: 'MASTER_TRANSFERRED',
@@ -637,17 +896,50 @@ async function startServer() {
             masterPlayerNumber: nextMaster.playerNumber,
             players: room.players.map(serializePlayer)
           });
-        } else {
-          room.masterPlayerId = null;
         }
       }
 
-      broadcastToRoom(roomId, {
-        type: 'PLAYER_LEFT',
-        playerId: player.id,
-        playerNumber: player.playerNumber,
-        room: serializeRoom(room)
-      });
+      // Start 60-second grace timer to preserve slot
+      if (player.reconnectTimer) clearTimeout(player.reconnectTimer);
+      player.reconnectTimer = setTimeout(() => {
+        const currentRoom = rooms[roomId];
+        if (!currentRoom) return;
+
+        const pIdx = currentRoom.players.findIndex(p => p.id === player.id);
+        if (pIdx >= 0 && !currentRoom.players[pIdx].connected) {
+          console.log(`[Grace Period Expired] Removing player ${player.name} (${player.id})`);
+          currentRoom.players.splice(pIdx, 1);
+
+          // Re-index remaining players
+          currentRoom.players.forEach((p, idx) => {
+            p.playerNumber = idx + 1;
+            if (p.state) {
+              p.state.role = (idx < (currentRoom.activePlayerCount || 2)) ? 'active' : 'spectator';
+            }
+          });
+
+          // If no master left and players remain, promote first connected
+          if (!currentRoom.masterPlayerId && currentRoom.players.length > 0) {
+            const firstConn = currentRoom.players.find(p => p.connected) || currentRoom.players[0];
+            firstConn.isMaster = true;
+            if (firstConn.state) firstConn.state.isHost = true;
+            currentRoom.masterPlayerId = firstConn.id;
+            broadcastToRoom(roomId, {
+              type: 'MASTER_TRANSFERRED',
+              masterPlayerId: firstConn.id,
+              masterPlayerName: firstConn.name,
+              masterPlayerNumber: firstConn.playerNumber,
+              players: currentRoom.players.map(serializePlayer)
+            });
+          }
+
+          broadcastToRoom(roomId, {
+            type: 'PLAYER_REMOVED',
+            playerId: player.id,
+            room: serializeRoom(currentRoom)
+          });
+        }
+      }, 60000);
     }
   }
 
@@ -657,12 +949,14 @@ async function startServer() {
       name: p.name,
       playerNumber: p.playerNumber,
       isMaster: p.isMaster,
+      isHost: p.isMaster,
       score: p.score,
       rank: p.rank,
       completed: p.completed,
       connected: p.connected,
       photoMode: p.photoMode,
-      sampleMode: p.sampleMode
+      sampleMode: p.sampleMode,
+      state: p.state || {}
     };
   }
 
@@ -671,6 +965,13 @@ async function startServer() {
       roomId: room.roomId,
       masterPlayerId: room.masterPlayerId,
       currentMission: room.currentMission,
+      activePlayerCount: room.activePlayerCount || 2,
+      screenState: room.screenState || {
+        view: 'LANDING',
+        activeMission: null,
+        isPaused: false,
+        activePlayerCount: 2
+      },
       players: room.players.map(serializePlayer)
     };
   }

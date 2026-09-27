@@ -3,8 +3,9 @@ import { EngineInstance } from './core/Engine.js';
 import { CameraInstance } from './camera/CameraManager.js';
 import { UIInstance } from './ui/UIManager.js';
 import { GameStateInstance } from './managers/GameStateManager.js';
+import { MultiplayerInstance } from './network/MultiplayerManager.js';
 
-// Bootstrapping the Solar Sentinel application
+// Bootstrapping the IN THE OUTER application
 function bootstrap() {
   try {
     // 1. Initialize the Core Three.js Engine with the container mounting point
@@ -27,11 +28,18 @@ function bootstrap() {
     // 6. Initialize Game State lifecycle machine (triggers Loading progress bar)
     GameStateInstance.init();
 
-    console.log("SOLAR SENTINEL // CORE INITIALIZED SUCCESSFULLY");
+    // 7. Initialize Multiplayer AirConsole Network Manager
+    MultiplayerInstance.init();
+
+    console.log("IN THE OUTER // CORE INITIALIZED SUCCESSFULLY");
   } catch (error) {
-    console.error("Critical error during Solar Sentinel bootstrapping:", error);
+    console.error("Critical error during IN THE OUTER bootstrapping:", error);
   }
 }
 
-// Start game when DOM is loaded
-window.addEventListener('DOMContentLoaded', bootstrap);
+// Start game when DOM is loaded or immediately if already parsed
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', bootstrap);
+} else {
+  bootstrap();
+}

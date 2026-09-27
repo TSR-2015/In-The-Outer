@@ -118,6 +118,10 @@ class Engine {
     this.bloomEnabled = enabled;
   }
 
+  setCustomRenderCallback(callback) {
+    this.customRenderCallback = callback;
+  }
+
   registerUpdateCallback(callback) {
     this.onUpdateCallbacks.push(callback);
   }
@@ -137,7 +141,9 @@ class Engine {
     }
 
     // Render pass
-    if (this.activeCamera) {
+    if (this.customRenderCallback) {
+      this.customRenderCallback(this.renderer, this.scene);
+    } else if (this.activeCamera) {
       if (this.bloomEnabled) {
         this.composer.render();
       } else {

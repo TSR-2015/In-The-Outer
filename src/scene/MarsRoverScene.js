@@ -8,49 +8,45 @@ import { AudioInstance } from '../managers/AudioManager.js';
 class MarsRoverScene {
   constructor() {
     this.group = new THREE.Group();
-    
+
     // Scene Elements
     this.terrainMesh = null;
-    this.roverGroup = null;
-    this.wheels = [];
-    this.frontSteerPivots = [];
-    this.roboticArm = null;
-    this.armSegment1 = null;
-    this.armSegment2 = null;
-    this.clawGroup = null;
-    this.testTubeGroup = null;
-    this.testTubeGlass = null;
-    this.testTubeFillMesh = null;
-    this.cameraMast = null;
-    
     this.sampleBeacons = [];
     this.dustParticles = null;
     this.wheelDustParticles = null;
     this.rockInstancedMesh = null;
-    
-    // Green Soil Region Indicator Meshes
+
+    // Dual Rovers for Multiplayer (Player 1 and Player 2)
+    this.rovers = {
+      1: null,
+      2: null
+    };
+
+    // Dual Perspective Cameras
+    this.camera1 = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    this.camera2 = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+    // Green Soil Indicator Meshes
     this.greenSoilGroup = null;
     this.greenSoilMeshes = [];
-    
-    this.isArmAnimating = false;
-    this.cameraMode = 'follow'; // follow, viewfinder_sky, viewfinder_ground, sampling_arm
+
     this.time = 0;
-    
+
     // Temp reusable vectors
-    this._tempRoverPos = new THREE.Vector3();
-    this._tempCamPos = new THREE.Vector3();
-    this._tempCamTarget = new THREE.Vector3();
+    this._tempPos1 = new THREE.Vector3();
+    this._tempCamPos1 = new THREE.Vector3();
+    this._tempCamTarget1 = new THREE.Vector3();
+
+    this._tempPos2 = new THREE.Vector3();
+    this._tempCamPos2 = new THREE.Vector3();
+    this._tempCamTarget2 = new THREE.Vector3();
   }
 
   init(parentScene) {
     this.group = new THREE.Group();
     this.group.name = "orbit_elements";
-    this.wheels = [];
-    this.frontSteerPivots = [];
     this.sampleBeacons = [];
     this.greenSoilMeshes = [];
-    this.isArmAnimating = false;
-    this.cameraMode = 'follow';
 
     // Atmospheric setup: Mars reddish sky & fog
     if (EngineInstance.scene) {
@@ -88,8 +84,12 @@ class MarsRoverScene {
     // 4. Sample Beacons & Research Anomaly
     this.buildSampleBeacons();
 
-    // 5. Build Procedural 6-Wheeled Mars Rover with Robotic Arm & Glass Test Tube
-    this.buildMarsRover();
+    // 5. Build Procedural Rovers for Player 1 and Player 2
+    this.rovers[1] = this.buildRoverMesh(1);
+    this.rovers[2] = this.buildRoverMesh(2);
+
+    this.group.add(this.rovers[1].group);
+    this.group.add(this.rovers[2].group);
 
     // 6. Build Green Bordered Soil Sampling Indicator Regions
     this.buildGreenSoilZones();
@@ -99,6 +99,13 @@ class MarsRoverScene {
     this.buildWheelDustEmitter();
 
     parentScene.add(this.group);
+
+    // Hook split-screen custom rendering
+    EngineInstance.setCustomRenderCallback(this.renderSplitScreen.bind(this));
+  }
+
+  cleanup() {
+    EngineInstance.setCustomRenderCallback(null);
   }
 
   // PROCEDURAL MARS TERRAIN WITH 4 REGIONS & HEIGHTFIELD
@@ -121,6 +128,7 @@ class MarsRoverScene {
       const z = posAttr.getZ(i);
 
       let h = Math.sin(x * 0.04) * 2.2 + Math.cos(z * 0.03) * 2.5 + Math.sin(x * 0.08 + z * 0.08) * 0.8;
+      h += Math.sin(x * 0.35 + z * 0.21) * 0.35 + Math.cos(x * 0.5 - z * 0.4) * 0.22;
 
       if (x < -30 && z > 20) {
         h += Math.sin(x * 0.12 - z * 0.08) * 4.5 + Math.cos(z * 0.15) * 2.2;
@@ -145,11 +153,10 @@ class MarsRoverScene {
       if (x < -30 && z > 20) {
         finalColor.lerp(cDune, 0.65);
       } else if (craterDist < 35) {
-        finalColor.lerp(cCrater, 0.75);
+        finalColor.lerp(cCrater, 0.7);
       } else if (x < -40 && z < -40) {
-        finalColor.lerp(cResearch, 0.55);
+        finalColor.lerp(cResearch, 0.6);
       }
-      finalColor.r += (h * 0.02);
 
       colors[i * 3] = finalColor.r;
       colors[i * 3 + 1] = finalColor.g;
@@ -159,25 +166,26 @@ class MarsRoverScene {
     geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geom.computeVertexNormals();
 
-    const mat = new THREE.MeshStandardMaterial({
+    const terrainMat = new THREE.MeshStandardMaterial({
       vertexColors: true,
       roughness: 0.92,
-      metalness: 0.05,
-      flatShading: true
+      metalness: 0.08,
+      flatShading: false
     });
 
-    this.terrainMesh = new THREE.Mesh(geom, mat);
+    this.terrainMesh = new THREE.Mesh(geom, terrainMat);
     this.terrainMesh.receiveShadow = true;
-    this.terrainMesh.castShadow = true;
     this.group.add(this.terrainMesh);
   }
 
-  // Get terrain height Y at coordinate (x, z)
   getTerrainHeight(x, z) {
     let h = Math.sin(x * 0.04) * 2.2 + Math.cos(z * 0.03) * 2.5 + Math.sin(x * 0.08 + z * 0.08) * 0.8;
+    h += Math.sin(x * 0.35 + z * 0.21) * 0.35 + Math.cos(x * 0.5 - z * 0.4) * 0.22;
+
     if (x < -30 && z > 20) {
       h += Math.sin(x * 0.12 - z * 0.08) * 4.5 + Math.cos(z * 0.15) * 2.2;
     }
+
     const craterDist = Math.sqrt((x - 60) * (x - 60) + (z + 55) * (z + 55));
     if (craterDist < 35) {
       if (craterDist < 25) {
@@ -186,74 +194,97 @@ class MarsRoverScene {
         h += (35 - craterDist) * 0.4;
       }
     }
+
     if (x < -40 && z < -40) {
       h += Math.sin(x * 0.1) * 1.5 + Math.cos(z * 0.1) * 1.5;
     }
+
     return h;
   }
 
-  // SCATTER INSTANCED ROCKS
+  // INSTANCED BOULDERS & ROCKS
   buildInstancedRocks() {
-    const rockCount = 320;
-    const geom = new THREE.DodecahedronGeometry(0.8, 1);
-    const mat = new THREE.MeshStandardMaterial({
-      color: 0x6e2a16,
+    const rockCount = 200;
+    const baseRockGeom = new THREE.DodecahedronGeometry(1, 1);
+    const rockMat = new THREE.MeshStandardMaterial({
+      color: 0x5a2315,
       roughness: 0.95,
-      metalness: 0.1,
-      flatShading: true
+      metalness: 0.05
     });
 
-    this.rockInstancedMesh = new THREE.InstancedMesh(geom, mat, rockCount);
+    this.rockInstancedMesh = new THREE.InstancedMesh(baseRockGeom, rockMat, rockCount);
     this.rockInstancedMesh.castShadow = true;
     this.rockInstancedMesh.receiveShadow = true;
-    this.rockInstancedMesh.name = "rock_instances";
 
     const dummy = new THREE.Object3D();
-    let seed = 12345;
-    const rand = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+    this.rockColliders = [];
+
+    let seed = 42;
+    const rnd = () => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
 
     for (let i = 0; i < rockCount; i++) {
-      const rx = (rand() - 0.5) * 230;
-      const rz = (rand() - 0.5) * 230;
+      let rx = (rnd() - 0.5) * 220;
+      let rz = (rnd() - 0.5) * 220;
 
-      if (Math.sqrt(rx * rx + rz * rz) < 12) continue;
+      // Keep starting spawn area clear
+      if (Math.abs(rx) < 18 && Math.abs(rz) < 18) {
+        rx += 30;
+      }
 
       const ry = this.getTerrainHeight(rx, rz);
-      const scaleX = 0.4 + rand() * 1.8;
-      const scaleY = 0.3 + rand() * 1.4;
-      const scaleZ = 0.4 + rand() * 1.8;
+      const scaleBase = 0.5 + rnd() * 2.2;
+      const scaleX = scaleBase * (0.7 + rnd() * 0.6);
+      const scaleY = scaleBase * (0.6 + rnd() * 0.8);
+      const scaleZ = scaleBase * (0.7 + rnd() * 0.6);
 
       dummy.position.set(rx, ry + scaleY * 0.4, rz);
-      dummy.rotation.set(rand() * Math.PI, rand() * Math.PI, rand() * Math.PI);
+      dummy.rotation.set(rnd() * Math.PI, rnd() * Math.PI, rnd() * Math.PI);
       dummy.scale.set(scaleX, scaleY, scaleZ);
       dummy.updateMatrix();
 
       this.rockInstancedMesh.setMatrixAt(i, dummy.matrix);
+
+      if (scaleBase > 1.2) {
+        this.rockColliders.push({
+          x: rx,
+          z: rz,
+          radius: Math.max(scaleX, scaleZ) * 1.05
+        });
+      }
     }
 
     this.rockInstancedMesh.instanceMatrix.needsUpdate = true;
     this.group.add(this.rockInstancedMesh);
   }
 
-  // SAMPLE BEACONS & RESEARCH ANOMALY
+  checkRockCollision(x, z, roverRadius = 1.3) {
+    if (!this.rockColliders) return false;
+    for (let i = 0; i < this.rockColliders.length; i++) {
+      const r = this.rockColliders[i];
+      const dx = x - r.x;
+      const dz = z - r.z;
+      const minDist = r.radius + roverRadius;
+      if (dx * dx + dz * dz < minDist * minDist) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // SAMPLE BEACONS & ANOMALY
   buildSampleBeacons() {
-    MarsRoverMissionInstance.sampleZones.forEach(zone => {
-      const beaconGroup = new THREE.Group();
-      const ry = this.getTerrainHeight(zone.x, zone.z);
-      beaconGroup.position.set(zone.x, ry, zone.z);
+    const zones = MarsRoverMissionInstance.sampleZones;
 
-      const ringGeom = new THREE.RingGeometry(1.2, 1.6, 24);
-      ringGeom.rotateX(-Math.PI / 2);
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: 0x38bdf8,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.8
-      });
-      const ring = new THREE.Mesh(ringGeom, ringMat);
-      beaconGroup.add(ring);
+    zones.forEach(z => {
+      const beacon = new THREE.Group();
+      const gy = this.getTerrainHeight(z.x, z.z);
+      beacon.position.set(z.x, gy, z.z);
 
-      const beamGeom = new THREE.CylinderGeometry(0.1, 0.8, 12, 16);
+      const beamGeom = new THREE.CylinderGeometry(0.15, 0.15, 20, 8);
+      beamGeom.translate(0, 10, 0);
       const beamMat = new THREE.MeshBasicMaterial({
         color: 0x38bdf8,
         transparent: true,
@@ -261,138 +292,158 @@ class MarsRoverScene {
         blending: THREE.AdditiveBlending
       });
       const beam = new THREE.Mesh(beamGeom, beamMat);
-      beam.position.set(0, 6, 0);
-      beaconGroup.add(beam);
+      beacon.add(beam);
 
-      this.group.add(beaconGroup);
-      this.sampleBeacons.push({ id: zone.id, group: beaconGroup, ring: ring, beam: beam });
+      const ringGeom = new THREE.RingGeometry(1.5, 2.2, 16);
+      ringGeom.rotateX(-Math.PI / 2);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.75
+      });
+      const ring = new THREE.Mesh(ringGeom, ringMat);
+      ring.position.y = 0.2;
+      beacon.add(ring);
+
+      this.group.add(beacon);
+      this.sampleBeacons.push({ group: beacon, beam, ring, zone: z });
     });
 
+    // Research Anomaly
     const anomalyGroup = new THREE.Group();
     const ay = this.getTerrainHeight(-75, -70);
     anomalyGroup.position.set(-75, ay, -70);
 
-    const pyrGeom = new THREE.ConeGeometry(4.0, 7.0, 4);
+    const pyrGeom = new THREE.ConeGeometry(3.5, 7, 4);
     const pyrMat = new THREE.MeshStandardMaterial({
-      color: 0x0f172a,
-      emissive: 0x38bdf8,
-      emissiveIntensity: 0.6,
-      roughness: 0.2,
-      metalness: 0.9
+      color: 0x1e293b,
+      metalness: 0.9,
+      roughness: 0.1
     });
     const pyr = new THREE.Mesh(pyrGeom, pyrMat);
     pyr.position.set(0, 3.5, 0);
     anomalyGroup.add(pyr);
-
     this.group.add(anomalyGroup);
   }
 
-  // BUILD PROCEDURAL 6-WHEELED MARS ROVER WITH GLASS TEST TUBE ROBOTIC ARM
-  buildMarsRover() {
-    this.roverGroup = new THREE.Group();
-    this.roverGroup.name = "mars_rover";
+  // FACTORY TO BUILD PROCEDURAL 6-WHEELED ROVER FOR PLAYER 1 OR 2
+  buildRoverMesh(playerNum) {
+    const roverGroup = new THREE.Group();
+    roverGroup.name = `mars_rover_p${playerNum}`;
 
+    const isP1 = playerNum === 1;
     const bodyMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.3, metalness: 0.7 });
     const darkMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6, metalness: 0.8 });
-    const goldFoilMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.4, metalness: 0.8 });
+    const foilMat = new THREE.MeshStandardMaterial({
+      color: isP1 ? 0xf59e0b : 0x0284c7, // Gold foil for P1, Cyan-blue foil for P2
+      roughness: 0.4,
+      metalness: 0.8
+    });
     const tireMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8, metalness: 0.4 });
     const solarMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.2, metalness: 0.9 });
+    const accentColor = isP1 ? 0xe11d48 : 0x0284c7;
 
     // Main Chassis Body
     const chassisGeom = new THREE.BoxGeometry(1.6, 0.6, 2.2);
     const chassisMesh = new THREE.Mesh(chassisGeom, bodyMat);
     chassisMesh.position.set(0, 0.8, 0);
     chassisMesh.castShadow = true;
-    this.roverGroup.add(chassisMesh);
+    roverGroup.add(chassisMesh);
 
-    // Gold Foil Insulation Wrap on Rear Payload
+    // Foil Insulation Wrap on Rear Payload
     const foilGeom = new THREE.BoxGeometry(1.4, 0.4, 0.8);
-    const foilMesh = new THREE.Mesh(foilGeom, goldFoilMat);
+    const foilMesh = new THREE.Mesh(foilGeom, foilMat);
     foilMesh.position.set(0, 1.1, -0.6);
-    this.roverGroup.add(foilMesh);
+    roverGroup.add(foilMesh);
 
     // Twin Solar Panel Wings
     const panelGeom = new THREE.BoxGeometry(1.2, 0.04, 1.6);
-    
     const leftSolar = new THREE.Mesh(panelGeom, solarMat);
     leftSolar.position.set(-1.4, 1.15, 0);
-    this.roverGroup.add(leftSolar);
+    roverGroup.add(leftSolar);
 
     const rightSolar = new THREE.Mesh(panelGeom, solarMat);
     rightSolar.position.set(1.4, 1.15, 0);
-    this.roverGroup.add(rightSolar);
+    roverGroup.add(rightSolar);
 
     // Camera Mast Structure (Front-Center)
-    this.cameraMast = new THREE.Group();
+    const cameraMast = new THREE.Group();
     const mastPoleGeom = new THREE.CylinderGeometry(0.05, 0.05, 1.2, 8);
     const mastPole = new THREE.Mesh(mastPoleGeom, darkMat);
     mastPole.position.set(0, 0.6, 0);
-    this.cameraMast.add(mastPole);
+    cameraMast.add(mastPole);
 
     const headGeom = new THREE.BoxGeometry(0.4, 0.2, 0.25);
     const headMesh = new THREE.Mesh(headGeom, bodyMat);
     headMesh.position.set(0, 1.2, 0);
-    this.cameraMast.add(headMesh);
+    cameraMast.add(headMesh);
 
     // Dual Lens Optics
     const lensGeom = new THREE.CylinderGeometry(0.06, 0.06, 0.1, 12);
     lensGeom.rotateX(Math.PI / 2);
-    const lensMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+    const lensMat = new THREE.MeshBasicMaterial({ color: accentColor });
 
     const lensL = new THREE.Mesh(lensGeom, lensMat);
     lensL.position.set(-0.1, 1.2, 0.12);
-    this.cameraMast.add(lensL);
+    cameraMast.add(lensL);
 
     const lensR = new THREE.Mesh(lensGeom, lensMat);
     lensR.position.set(0.1, 1.2, 0.12);
-    this.cameraMast.add(lensR);
+    cameraMast.add(lensR);
 
-    this.cameraMast.position.set(0, 1.1, 0.8);
-    this.roverGroup.add(this.cameraMast);
+    cameraMast.position.set(0, 1.1, 0.8);
+    roverGroup.add(cameraMast);
 
     // Dish Antenna
     const dishGeom = new THREE.CylinderGeometry(0.35, 0.05, 0.1, 16);
     dishGeom.rotateX(Math.PI / 4);
     const dishMesh = new THREE.Mesh(dishGeom, darkMat);
     dishMesh.position.set(0.5, 1.4, -0.7);
-    this.roverGroup.add(dishMesh);
+    roverGroup.add(dishMesh);
 
-    // Articulated Robotic Arm Assembly with Glass Test Tube (Front-Right Hand)
-    this.roboticArm = new THREE.Group();
-    this.roboticArm.position.set(0.6, 0.8, 0.9);
+    // Identification Flag Marker (P1 / P2)
+    const flagPoleGeom = new THREE.CylinderGeometry(0.02, 0.02, 1.8, 6);
+    const flagPole = new THREE.Mesh(flagPoleGeom, darkMat);
+    flagPole.position.set(-0.6, 1.6, -0.9);
+    roverGroup.add(flagPole);
 
-    const shoulderGeom = new THREE.SphereGeometry(0.12, 12, 12);
-    const shoulder = new THREE.Mesh(shoulderGeom, darkMat);
-    this.roboticArm.add(shoulder);
+    const flagGeom = new THREE.BoxGeometry(0.45, 0.3, 0.02);
+    const flagMat = new THREE.MeshBasicMaterial({ color: accentColor });
+    const flagMesh = new THREE.Mesh(flagGeom, flagMat);
+    flagMesh.position.set(-0.35, 2.3, -0.9);
+    roverGroup.add(flagMesh);
 
-    this.armSegment1 = new THREE.Group();
+    // Articulated Robotic Arm with Glass Test Tube
+    const roboticArm = new THREE.Group();
+    roboticArm.position.set(0.6, 0.8, 0.9);
+
+    const shoulder = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), darkMat);
+    roboticArm.add(shoulder);
+
+    const armSegment1 = new THREE.Group();
     const seg1Geom = new THREE.CylinderGeometry(0.04, 0.04, 0.6, 8);
     seg1Geom.translate(0, 0.3, 0);
     const seg1Mesh = new THREE.Mesh(seg1Geom, bodyMat);
-    this.armSegment1.add(seg1Mesh);
-    this.roboticArm.add(this.armSegment1);
+    armSegment1.add(seg1Mesh);
+    roboticArm.add(armSegment1);
 
-    this.armSegment2 = new THREE.Group();
-    this.armSegment2.position.set(0, 0.6, 0);
+    const armSegment2 = new THREE.Group();
+    armSegment2.position.set(0, 0.6, 0);
     const seg2Geom = new THREE.CylinderGeometry(0.03, 0.03, 0.5, 8);
     seg2Geom.translate(0, 0.25, 0);
     const seg2Mesh = new THREE.Mesh(seg2Geom, darkMat);
-    this.armSegment2.add(seg2Mesh);
+    armSegment2.add(seg2Mesh);
 
-    // Gripper / Claw Group
-    this.clawGroup = new THREE.Group();
-    this.clawGroup.position.set(0, 0.5, 0);
+    const clawGroup = new THREE.Group();
+    clawGroup.position.set(0, 0.5, 0);
+    const clawMesh = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.08, 0.16), foilMat);
+    clawGroup.add(clawMesh);
 
-    const clawGeom = new THREE.BoxGeometry(0.16, 0.08, 0.16);
-    const clawMesh = new THREE.Mesh(clawGeom, goldFoilMat);
-    this.clawGroup.add(clawMesh);
+    // Glass test tube
+    const testTubeGroup = new THREE.Group();
+    testTubeGroup.position.set(0.08, -0.1, 0.08);
 
-    // GLASS TEST TUBE HELD IN RIGHT HAND GRIPPER
-    this.testTubeGroup = new THREE.Group();
-    this.testTubeGroup.position.set(0.08, -0.1, 0.08);
-
-    // Outer Glass Cylinder
-    const glassGeom = new THREE.CylinderGeometry(0.045, 0.045, 0.35, 16);
     const glassMat = new THREE.MeshStandardMaterial({
       color: 0xe0f2fe,
       roughness: 0.1,
@@ -400,36 +451,33 @@ class MarsRoverScene {
       transparent: true,
       opacity: 0.65
     });
-    this.testTubeGlass = new THREE.Mesh(glassGeom, glassMat);
-    this.testTubeGroup.add(this.testTubeGlass);
+    const testTubeGlass = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.35, 16), glassMat);
+    testTubeGroup.add(testTubeGlass);
 
-    // Rubber Seal Cap on top
-    const capGeom = new THREE.CylinderGeometry(0.048, 0.048, 0.06, 12);
-    const capMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 });
-    const capMesh = new THREE.Mesh(capGeom, capMat);
+    const capMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.048, 0.048, 0.06, 12),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 })
+    );
     capMesh.position.set(0, 0.18, 0);
-    this.testTubeGroup.add(capMesh);
+    testTubeGroup.add(capMesh);
 
-    // Inner Regolith Soil Fill Cylinder (starts empty / scale Y = 0)
     const fillGeom = new THREE.CylinderGeometry(0.038, 0.038, 0.28, 12);
     fillGeom.translate(0, -0.12, 0);
-    const fillMat = new THREE.MeshStandardMaterial({
-      color: 0xd97441,
-      roughness: 0.95
-    });
-    this.testTubeFillMesh = new THREE.Mesh(fillGeom, fillMat);
-    this.testTubeFillMesh.scale.set(1, 0.001, 1);
-    this.testTubeGroup.add(this.testTubeFillMesh);
+    const testTubeFillMesh = new THREE.Mesh(fillGeom, new THREE.MeshStandardMaterial({ color: 0xd97441, roughness: 0.95 }));
+    testTubeFillMesh.scale.set(1, 0.001, 1);
+    testTubeGroup.add(testTubeFillMesh);
 
-    this.clawGroup.add(this.testTubeGroup);
-    this.armSegment2.add(this.clawGroup);
+    clawGroup.add(testTubeGroup);
+    armSegment2.add(clawGroup);
+    armSegment1.add(armSegment2);
+    roverGroup.add(roboticArm);
 
-    this.armSegment1.add(this.armSegment2);
-    this.roverGroup.add(this.roboticArm);
-
-    // 6 Wheels with Suspension Struts
+    // 6 Wheels with Suspension Pivots
     const wheelGeom = new THREE.CylinderGeometry(0.32, 0.32, 0.28, 16);
     wheelGeom.rotateZ(Math.PI / 2);
+
+    const wheels = [];
+    const frontSteerPivots = [];
 
     const wheelOffsets = [
       { x: -1.0, y: 0.32, z: 0.9, isSteering: true },
@@ -448,152 +496,53 @@ class MarsRoverScene {
       wheelMesh.castShadow = true;
       pivot.add(wheelMesh);
 
-      const rimGeom = new THREE.CylinderGeometry(0.325, 0.325, 0.05, 8);
-      rimGeom.rotateZ(Math.PI / 2);
-      const rimMesh = new THREE.Mesh(rimGeom, darkMat);
-      pivot.add(rimMesh);
-
-      this.roverGroup.add(pivot);
-      this.wheels.push(wheelMesh);
-
+      roverGroup.add(pivot);
+      wheels.push(wheelMesh);
       if (off.isSteering) {
-        this.frontSteerPivots.push(pivot);
+        frontSteerPivots.push(pivot);
       }
     });
 
-    this.group.add(this.roverGroup);
+    return {
+      group: roverGroup,
+      wheels,
+      frontSteerPivots,
+      cameraMast,
+      roboticArm,
+      armSegment1,
+      armSegment2,
+      clawGroup,
+      testTubeGroup,
+      testTubeFillMesh,
+      isArmAnimating: false
+    };
   }
 
-  // BUILD 3 GREEN BORDERED SOIL SAMPLING INDICATOR REGIONS ON THE GROUND
+  // GREEN SOIL SAMPLE INDICATORS
   buildGreenSoilZones() {
     this.greenSoilGroup = new THREE.Group();
-    this.greenSoilGroup.name = "green_soil_zones";
-    this.greenSoilGroup.visible = false;
-    this.greenSoilMeshes = [];
+    const ringGeom = new THREE.RingGeometry(2.5, 3.8, 32);
+    ringGeom.rotateX(-Math.PI / 2);
 
-    const offsets = [
-      { x: -1.4, z: 2.2 },
-      { x: 0.0,  z: 2.8 },
-      { x: 1.4,  z: 2.2 }
-    ];
-
-    offsets.forEach((off, idx) => {
-      const zoneGroup = new THREE.Group();
-
-      const ringGeom = new THREE.RingGeometry(0.7, 0.9, 32);
-      ringGeom.rotateX(-Math.PI / 2);
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: 0x22c55e,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.9
-      });
-      const ring = new THREE.Mesh(ringGeom, ringMat);
-      ring.name = `green_soil_ring_${idx}`;
-      ring.userData = { zoneIndex: idx };
-      zoneGroup.add(ring);
-
-      const discGeom = new THREE.CircleGeometry(0.7, 32);
-      discGeom.rotateX(-Math.PI / 2);
-      const discMat = new THREE.MeshBasicMaterial({
-        color: 0x10b981,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.35
-      });
-      const disc = new THREE.Mesh(discGeom, discMat);
-      disc.name = `green_soil_disc_${idx}`;
-      disc.userData = { zoneIndex: idx };
-      zoneGroup.add(disc);
-
-      const boxGeom = new THREE.CylinderGeometry(0.9, 0.9, 0.4, 16);
-      const boxMat = new THREE.MeshBasicMaterial({ visible: false });
-      const targetBox = new THREE.Mesh(boxGeom, boxMat);
-      targetBox.name = `green_soil_target_${idx}`;
-      targetBox.userData = { zoneIndex: idx };
-      zoneGroup.add(targetBox);
-
-      this.greenSoilGroup.add(zoneGroup);
-      this.greenSoilMeshes.push(targetBox);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0x10b981,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.75
     });
 
+    for (let i = 0; i < 4; i++) {
+      const ring = new THREE.Mesh(ringGeom, ringMat.clone());
+      ring.position.set(0, -999, 0);
+      this.greenSoilGroup.add(ring);
+      this.greenSoilMeshes.push(ring);
+    }
     this.group.add(this.greenSoilGroup);
   }
 
-  updateGreenSoilPositions() {
-    if (!this.roverGroup || !this.greenSoilGroup) return;
-
-    const rx = this.roverGroup.position.x;
-    const ry = this.roverGroup.position.y;
-    const rz = this.roverGroup.position.z;
-    const rot = this.roverGroup.rotation.y;
-
-    const offsets = [
-      { x: -1.2, z: 2.2 },
-      { x: 0.0,  z: 2.8 },
-      { x: 1.2,  z: 2.2 }
-    ];
-
-    offsets.forEach((off, idx) => {
-      const child = this.greenSoilGroup.children[idx];
-      if (!child) return;
-
-      const vec = new THREE.Vector3(off.x, 0, off.z);
-      vec.applyAxisAngle(new THREE.Vector3(0, 1, 0), rot);
-
-      const wx = rx + vec.x;
-      const wz = rz + vec.z;
-      const wy = this.getTerrainHeight(wx, wz) + 0.05;
-
-      child.position.set(wx, wy, wz);
-      child.rotation.y = rot;
-    });
-  }
-
-  setCameraMode(mode) {
-    this.cameraMode = mode;
-    if (mode === 'sampling_arm') {
-      this.greenSoilGroup.visible = true;
-      this.updateGreenSoilPositions();
-    } else {
-      this.greenSoilGroup.visible = false;
-    }
-  }
-
-  animateTestTubeScoop(zoneIndex, soilColorHex = 0xd97441, onComplete = null) {
-    if (this.isArmAnimating || !this.armSegment1 || !this.armSegment2) return;
-    this.isArmAnimating = true;
-
-    AudioInstance.playArmMotor();
-
-    if (this.testTubeFillMesh) {
-      this.testTubeFillMesh.material.color.setHex(soilColorHex);
-    }
-
-    const targetChild = this.greenSoilGroup.children[zoneIndex];
-    
-    gsap.timeline({
-      onComplete: () => {
-        this.isArmAnimating = false;
-        if (onComplete) onComplete();
-      }
-    })
-    .to(this.armSegment1.rotation, { x: Math.PI / 2.2, y: (zoneIndex - 1) * 0.35, duration: 1.0, ease: "power2.out" })
-    .to(this.armSegment2.rotation, { x: -Math.PI / 2.6, duration: 0.8, ease: "power2.out" }, "-=0.4")
-    .to(this.testTubeGroup.position, { y: -0.25, duration: 0.5, ease: "power1.inOut" })
-    .to(this.testTubeFillMesh.scale, { y: 1.0, duration: 0.8, ease: "power2.out", onStart: () => {
-      AudioInstance.playScienceBeep();
-      if (targetChild) {
-        this.emitWheelDust(targetChild.position);
-      }
-    }}, "-=0.3")
-    .to(this.testTubeGroup.position, { y: -0.1, duration: 0.5, ease: "power1.out" })
-    .to(this.armSegment2.rotation, { x: 0, duration: 0.8, ease: "power2.inOut" })
-    .to(this.armSegment1.rotation, { x: 0, y: 0, duration: 1.0, ease: "power2.inOut" }, "-=0.5");
-  }
-
+  // AIRBORNE DUST PARTICLES
   buildAirborneDust() {
-    const count = 300;
+    const count = 350;
     const geom = new THREE.BufferGeometry();
     const positions = new Float32Array(count * 3);
 
@@ -618,7 +567,7 @@ class MarsRoverScene {
   }
 
   buildWheelDustEmitter() {
-    const count = 60;
+    const count = 80;
     const geom = new THREE.BufferGeometry();
     const positions = new Float32Array(count * 3);
 
@@ -646,18 +595,9 @@ class MarsRoverScene {
   emitWheelDust(origin) {
     if (!this.wheelDustParticles) return;
     const posAttr = this.wheelDustParticles.geometry.attributes.position;
-    
-    let foundIdx = -1;
-    for (let i = 0; i < posAttr.count; i++) {
-      if (posAttr.getY(i) < -5000) {
-        foundIdx = i;
-        break;
-      }
-    }
-    if (foundIdx === -1) foundIdx = Math.floor(Math.random() * posAttr.count);
-
+    const idx = Math.floor(Math.random() * posAttr.count);
     posAttr.setXYZ(
-      foundIdx,
+      idx,
       origin.x + (Math.random() - 0.5) * 0.6,
       origin.y + 0.1,
       origin.z + (Math.random() - 0.5) * 0.6
@@ -665,133 +605,208 @@ class MarsRoverScene {
     posAttr.needsUpdate = true;
   }
 
+  // ANIMATE TEST TUBE SAMPLING FOR GIVEN PLAYER
+  animateTestTubeScoop(playerNum, soilColor, onDone) {
+    const r = this.rovers[playerNum];
+    if (!r || r.isArmAnimating) {
+      if (onDone) onDone();
+      return;
+    }
+
+    r.isArmAnimating = true;
+    if (r.testTubeFillMesh) {
+      r.testTubeFillMesh.material.color.setHex(soilColor);
+    }
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        r.isArmAnimating = false;
+        if (onDone) onDone();
+      }
+    });
+
+    // Lower arm -> scoop -> raise arm
+    tl.to(r.armSegment1.rotation, { x: 0.85, duration: 0.45, ease: "power2.out" })
+      .to(r.armSegment2.rotation, { x: 0.95, duration: 0.45, ease: "power2.out" }, "-=0.2")
+      .to(r.testTubeFillMesh.scale, { y: 1.0, duration: 0.35, ease: "power1.inOut" })
+      .to(r.armSegment1.rotation, { x: 0.0, duration: 0.5, ease: "power2.inOut" }, "+=0.1")
+      .to(r.armSegment2.rotation, { x: 0.0, duration: 0.5, ease: "power2.inOut" }, "-=0.35");
+  }
+
+  // UPDATE LOOP (60 FPS)
   update(delta, time) {
     this.time = time;
     const mission = MarsRoverMissionInstance;
 
-    const rx = mission.roverX;
-    const rz = mission.roverZ;
-    const ry = this.getTerrainHeight(rx, rz);
+    // Update Rover 1 and Rover 2 meshes
+    [1, 2].forEach(pNum => {
+      const p = mission.players[pNum];
+      const r = this.rovers[pNum];
+      if (!p || !r) return;
 
-    if (this.roverGroup) {
-      this.roverGroup.position.set(rx, ry, rz);
-      this.roverGroup.rotation.y = mission.roverRotation;
+      const rx = p.roverX;
+      const rz = p.roverZ;
+      const ry = this.getTerrainHeight(rx, rz);
 
-      const speedPct = mission.speed / 6.5;
-      this.wheels.forEach(w => {
+      const facingX = Math.sin(p.roverRotation);
+      const facingZ = Math.cos(p.roverRotation);
+      const sideX = Math.cos(p.roverRotation);
+      const sideZ = -Math.sin(p.roverRotation);
+
+      const frontY = this.getTerrainHeight(rx + facingX * 1.6, rz + facingZ * 1.6);
+      const backY = this.getTerrainHeight(rx - facingX * 1.6, rz - facingZ * 1.6);
+      const leftY = this.getTerrainHeight(rx + sideX * 0.9, rz + sideZ * 0.9);
+      const rightY = this.getTerrainHeight(rx - sideX * 0.9, rz - sideZ * 0.9);
+
+      const pitch = Math.atan2(frontY - backY, 3.2);
+      const roll = Math.atan2(leftY - rightY, 1.8);
+
+      r.group.position.set(rx, ry, rz);
+      r.group.rotation.y = p.roverRotation;
+      r.group.rotation.x = THREE.MathUtils.lerp(r.group.rotation.x || 0, pitch, 0.25);
+      r.group.rotation.z = THREE.MathUtils.lerp(r.group.rotation.z || 0, roll, 0.25);
+
+      const bob = Math.sin((time + pNum * 2) * 8.0) * 0.015 * Math.min(1, Math.abs(p.speed) / 3.0 + 0.15);
+      r.group.position.y += bob;
+
+      const speedPct = p.speed / 6.5;
+      r.wheels.forEach(w => {
         w.rotation.x += speedPct * delta * 12.0;
       });
 
-      const steerAngle = (mission.keys.left ? 0.35 : 0) - (mission.keys.right ? 0.35 : 0);
-      this.frontSteerPivots.forEach(p => {
-        p.rotation.y = steerAngle;
+      const steerAngle = (p.keys.left ? 0.35 : 0) - (p.keys.right ? 0.35 : 0);
+      r.frontSteerPivots.forEach(pivot => {
+        pivot.rotation.y = steerAngle;
       });
 
-      if (this.cameraMast) {
-        this.cameraMast.rotation.y = Math.sin(time * 0.5) * 0.08;
+      if (r.cameraMast) {
+        r.cameraMast.rotation.y = Math.sin((time + pNum) * 0.5) * 0.08;
       }
 
-      if (Math.abs(mission.speed) > 0.5) {
-        this.emitWheelDust(this.roverGroup.position);
+      if (Math.abs(p.speed) > 0.5) {
+        this.emitWheelDust(r.group.position);
       }
-    }
+    });
 
-    if (this.cameraMode === 'sampling_arm') {
-      this.updateGreenSoilPositions();
-      if (this.greenSoilGroup) {
-        this.greenSoilGroup.children.forEach(g => {
-          const ring = g.children[0];
-          if (ring) ring.material.opacity = 0.6 + Math.sin(time * 6) * 0.3;
-        });
-      }
-    }
-
+    // Sample Beacons Animation
     this.sampleBeacons.forEach(b => {
       if (b.ring) b.ring.rotation.z = time * 1.5;
       if (b.beam) b.beam.material.opacity = 0.25 + Math.sin(time * 3) * 0.1;
     });
 
+    // Atmospheric Dust
     if (this.dustParticles) {
+      const windFactor = THREE.MathUtils.clamp(mission.windSpeed / 20, 0.4, 2.5);
+      const gust = 1.0 + Math.sin(time * 0.6) * 0.35;
+      const driftSpeed = windFactor * gust;
+
       const posAttr = this.dustParticles.geometry.attributes.position;
       for (let i = 0; i < posAttr.count; i++) {
-        let x = posAttr.getX(i);
-        let y = posAttr.getY(i);
-        let z = posAttr.getZ(i);
-
-        x += delta * 1.8;
-        z += delta * 0.8;
+        let x = posAttr.getX(i) + delta * 1.8 * driftSpeed;
+        let y = posAttr.getY(i) + Math.sin(time * 0.4 + posAttr.getX(i) * 0.05) * delta * 0.3;
+        let z = posAttr.getZ(i) + delta * 0.8 * driftSpeed;
         if (x > 130) x = -130;
         if (z > 130) z = -130;
-
         posAttr.setXYZ(i, x, y, z);
       }
       posAttr.needsUpdate = true;
     }
 
-    if (this.wheelDustParticles) {
-      const posAttr = this.wheelDustParticles.geometry.attributes.position;
-      for (let i = 0; i < posAttr.count; i++) {
-        if (posAttr.getY(i) > -5000) {
-          posAttr.setY(i, posAttr.getY(i) + delta * 0.8);
-          if (Math.random() < 0.1) posAttr.setY(i, -9999);
-        }
-      }
-      posAttr.needsUpdate = true;
-    }
-
-    this.updateCamera(delta);
+    // Update Cameras
+    this.updateCameras(delta);
   }
 
-  updateCamera(delta) {
-    if (!this.roverGroup) return;
+  updateCameras(delta) {
+    const mission = MarsRoverMissionInstance;
 
-    CameraInstance.controls.enabled = false;
-    this.roverGroup.getWorldPosition(this._tempRoverPos);
-    const rot = this.roverGroup.rotation.y;
+    // Update Camera 1 for Player 1
+    if (this.rovers[1]) {
+      this.updateSingleCamera(this.camera1, this.rovers[1].group, mission.players[1]);
+    }
 
-    if (this.cameraMode === 'viewfinder_sky') {
-      const mastOffset = new THREE.Vector3(0, 2.3, 0.8);
-      mastOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), rot);
-      this._tempCamPos.copy(this._tempRoverPos).add(mastOffset);
+    // Update Camera 2 for Player 2
+    if (this.rovers[2]) {
+      this.updateSingleCamera(this.camera2, this.rovers[2].group, mission.players[2]);
+    }
+  }
 
-      const lookTargetOffset = new THREE.Vector3(0, 8.0, 15.0);
-      lookTargetOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), rot);
-      this._tempCamTarget.copy(this._tempRoverPos).add(lookTargetOffset);
-    } 
-    else if (this.cameraMode === 'viewfinder_ground') {
-      const mastOffset = new THREE.Vector3(0, 2.2, 0.8);
-      mastOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), rot);
-      this._tempCamPos.copy(this._tempRoverPos).add(mastOffset);
+  updateSingleCamera(camera, roverGroup, playerState) {
+    if (!roverGroup || !playerState) return;
 
-      const lookTargetOffset = new THREE.Vector3(0, -1.8, 4.5);
-      lookTargetOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), rot);
-      this._tempCamTarget.copy(this._tempRoverPos).add(lookTargetOffset);
-    } 
-    else if (this.cameraMode === 'sampling_arm') {
-      const armCamOffset = new THREE.Vector3(0.8, 2.4, 1.2);
-      armCamOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), rot);
-      this._tempCamPos.copy(this._tempRoverPos).add(armCamOffset);
+    const tempPos = new THREE.Vector3();
+    const tempCamPos = new THREE.Vector3();
+    const tempTarget = new THREE.Vector3();
 
-      const lookTargetOffset = new THREE.Vector3(0.0, 0.2, 2.5);
-      lookTargetOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), rot);
-      this._tempCamTarget.copy(this._tempRoverPos).add(lookTargetOffset);
-    } 
-    else {
-      const camOffset = new THREE.Vector3(0, 3.8, -8.5);
-      camOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), rot);
+    roverGroup.getWorldPosition(tempPos);
+    const rot = roverGroup.rotation.y;
 
-      this._tempCamPos.copy(this._tempRoverPos).add(camOffset);
-      this._tempCamTarget.copy(this._tempRoverPos).add(new THREE.Vector3(0, 1.4, 0));
+    if (playerState.inViewfinder) {
+      if (playerState.viewfinderMode === 'sky') {
+        const mastOffset = new THREE.Vector3(0, 2.3, 0.8).applyAxisAngle(new THREE.Vector3(0, 1, 0), rot);
+        tempCamPos.copy(tempPos).add(mastOffset);
+        const lookTarget = new THREE.Vector3(0, 8.0, 15.0).applyAxisAngle(new THREE.Vector3(0, 1, 0), rot);
+        tempTarget.copy(tempPos).add(lookTarget);
+      } else {
+        const mastOffset = new THREE.Vector3(0, 2.2, 0.8).applyAxisAngle(new THREE.Vector3(0, 1, 0), rot);
+        tempCamPos.copy(tempPos).add(mastOffset);
+        const lookTarget = new THREE.Vector3(0, -1.8, 4.5).applyAxisAngle(new THREE.Vector3(0, 1, 0), rot);
+        tempTarget.copy(tempPos).add(lookTarget);
+      }
+    } else if (playerState.inSamplingMode) {
+      const armCamOffset = new THREE.Vector3(0.8, 2.4, 1.2).applyAxisAngle(new THREE.Vector3(0, 1, 0), rot);
+      tempCamPos.copy(tempPos).add(armCamOffset);
+      const lookTarget = new THREE.Vector3(0.0, 0.2, 2.5).applyAxisAngle(new THREE.Vector3(0, 1, 0), rot);
+      tempTarget.copy(tempPos).add(lookTarget);
+    } else {
+      // Normal Third-Person Follow Camera
+      const camOffset = new THREE.Vector3(0, 3.8, -8.5).applyAxisAngle(new THREE.Vector3(0, 1, 0), rot);
+      tempCamPos.copy(tempPos).add(camOffset);
+      tempTarget.copy(tempPos).add(new THREE.Vector3(0, 1.4, 0));
 
-      const minCamY = this.getTerrainHeight(this._tempCamPos.x, this._tempCamPos.z) + 1.8;
-      if (this._tempCamPos.y < minCamY) {
-        this._tempCamPos.y = minCamY;
+      const minCamY = this.getTerrainHeight(tempCamPos.x, tempCamPos.z) + 1.8;
+      if (tempCamPos.y < minCamY) {
+        tempCamPos.y = minCamY;
       }
     }
 
-    CameraInstance.activeCamera.position.lerp(this._tempCamPos, 0.08);
-    CameraInstance.controls.target.lerp(this._tempCamTarget, 0.08);
-    CameraInstance.activeCamera.lookAt(CameraInstance.controls.target);
+    camera.position.lerp(tempCamPos, 0.09);
+    camera.lookAt(tempTarget);
+  }
+
+  // SPLIT SCREEN RENDER PASS HOOK
+  renderSplitScreen(renderer, scene) {
+    const isSplit = MarsRoverMissionInstance.isSplitScreen;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    if (isSplit) {
+      // TWO PLAYER SPLIT-SCREEN MODE (Left: P1, Right: P2)
+      renderer.setScissorTest(true);
+      const halfWidth = Math.floor(width / 2);
+
+      // 1. Left Viewport (Player 1)
+      renderer.setViewport(0, 0, halfWidth, height);
+      renderer.setScissor(0, 0, halfWidth, height);
+      this.camera1.aspect = halfWidth / height;
+      this.camera1.updateProjectionMatrix();
+      renderer.render(scene, this.camera1);
+
+      // 2. Right Viewport (Player 2)
+      renderer.setViewport(halfWidth, 0, width - halfWidth, height);
+      renderer.setScissor(halfWidth, 0, width - halfWidth, height);
+      this.camera2.aspect = (width - halfWidth) / height;
+      this.camera2.updateProjectionMatrix();
+      renderer.render(scene, this.camera2);
+
+      renderer.setScissorTest(false);
+    } else {
+      // ONE PLAYER FULLSCREEN MODE
+      renderer.setScissorTest(false);
+      renderer.setViewport(0, 0, width, height);
+      this.camera1.aspect = width / height;
+      this.camera1.updateProjectionMatrix();
+      renderer.render(scene, this.camera1);
+    }
   }
 }
 

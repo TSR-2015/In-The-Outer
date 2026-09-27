@@ -8,6 +8,10 @@ import { ProgressInstance } from '../managers/ProgressManager.js';
 import { EarthToMoonMissionInstance } from '../missions/EarthToMoonMission.js';
 import { MarsRoverMissionInstance } from '../missions/MarsRoverMission.js';
 import { MarsRoverSceneInstance } from '../scene/MarsRoverScene.js';
+import { TelescopeMissionInstance } from '../missions/TelescopeMission.js';
+import { TelescopeVisualsInstance } from '../scene/TelescopeVisuals.js';
+import { MultiplayerInstance } from '../network/MultiplayerManager.js';
+import { Icons } from './Icons.js';
 
 class UIManager {
   constructor() {
@@ -29,8 +33,17 @@ class UIManager {
     this.setupSatelliteSelection();
     this.setupDashboardListeners();
     this.setupProgressScreenListeners();
-    this.setupEarthMoonMissionListeners();
+    if (typeof this.setupEarthMoonMissionListeners === 'function') {
+      this.setupEarthMoonMissionListeners();
+    }
     this.setupMarsMissionListeners();
+
+    // Universal Hover Sound for interactive elements
+    window.addEventListener('mouseover', (e) => {
+      if (e.target && e.target.closest('button, .sat-card, .mission-card, .quiz-option-btn, .cam-btn, .brief-btn')) {
+        AudioInstance.playHover();
+      }
+    });
   }
 
   // Minimalist Sound Toggle
@@ -57,6 +70,16 @@ class UIManager {
       }
     };
 
+    bindBtn('btn-mode-single', () => {
+      GameStateInstance.isMultiplayer = false;
+      GameStateInstance.changeState('PROGRESS');
+    });
+    bindBtn('btn-mode-multi', () => {
+      GameStateInstance.isMultiplayer = true;
+      GameStateInstance.changeState('LOBBY');
+    });
+    bindBtn('btn-lobby-back', () => GameStateInstance.changeState('LANDING'));
+    bindBtn('btn-lobby-start', () => GameStateInstance.changeState('MARS_ROVER'));
     bindBtn('btn-start', () => GameStateInstance.changeState('PROGRESS'));
     bindBtn('btn-howto', () => this.toggleModal('howto-modal', true));
     bindBtn('btn-credits', () => this.toggleModal('credits-modal', true));
@@ -77,25 +100,56 @@ class UIManager {
       
       if (GameStateInstance.lastCompletedMission === 3) {
         GameStateInstance.changeState('MARS_ROVER');
-      } else if (GameStateInstance.selectedSatelliteIndex >= 0) {
-        GameStateInstance.changeState('SELECT');
-      } else {
+      } else if (GameStateInstance.lastCompletedMission === 2) {
         GameStateInstance.changeState('EARTH_TO_MOON');
+      } else if (GameStateInstance.selectedSatelliteIndex >= 0) {
+        GameStateInstance.changeState('ORBIT');
+      } else {
+        GameStateInstance.changeState('SELECT');
       }
     });
 
     // Modal close hooks
     bindBtn('btn-howto-close', () => this.toggleModal('howto-modal', false));
     bindBtn('btn-credits-close', () => this.toggleModal('credits-modal', false));
+
+    // Cosmic parallax background tracking
+    this.setupLandingParallax();
+  }
+
+  setupLandingParallax() {
+    const landing = document.getElementById('landing-page');
+    if (!landing) return;
+    const layers = landing.querySelectorAll('.parallax-layer');
+    if (!layers || layers.length === 0) return;
+
+    window.addEventListener('mousemove', (e) => {
+      if (!landing.classList.contains('active')) return;
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      const dx = (e.clientX - cx) / cx;
+      const dy = (e.clientY - cy) / cy;
+
+      layers.forEach(layer => {
+        const speed = parseFloat(layer.getAttribute('data-speed')) || 0.05;
+        const x = -dx * speed * 60;
+        const y = -dy * speed * 60;
+        layer.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      });
+    }, { passive: true });
   }
 
   toggleModal(id, show) {
     const modal = document.getElementById(id);
     if (modal) {
       if (show) {
+        modal.classList.remove('hidden');
         modal.classList.add('active');
+        modal.style.display = 'flex';
       } else {
         modal.classList.remove('active');
+        modal.classList.add('hidden');
+        modal.style.display = '';
       }
     }
   }
@@ -161,24 +215,28 @@ class UIManager {
         
         // Enable Launch button
         const launchBtn = document.getElementById('btn-launch-sequence');
-        launchBtn.classList.remove('disabled');
-        launchBtn.removeAttribute('disabled');
+        if (launchBtn) {
+          launchBtn.classList.remove('disabled');
+          launchBtn.removeAttribute('disabled');
+        }
         
-        AudioInstance.playClick();
+        AudioInstance.playSelectProbe();
       });
 
       grid.appendChild(card);
     });
 
     const launchBtn = document.getElementById('btn-launch-sequence');
-    launchBtn.addEventListener('click', () => {
-      if (this.selectedSat) {
-        AudioInstance.playClick();
-        GameStateInstance.selectedSatelliteIndex = this.selectedIdx;
-        GameStateInstance.selectedSatData = JSON.parse(JSON.stringify(this.selectedSat));
-        GameStateInstance.changeState('ORBIT');
-      }
-    });
+    if (launchBtn) {
+      launchBtn.addEventListener('click', () => {
+        if (this.selectedSat) {
+          AudioInstance.playClick();
+          GameStateInstance.selectedSatelliteIndex = this.selectedIdx;
+          GameStateInstance.selectedSatData = JSON.parse(JSON.stringify(this.selectedSat));
+          GameStateInstance.changeState('ORBIT');
+        }
+      });
+    }
   }
 
   startTimingSliderLoop() {
@@ -218,7 +276,7 @@ class UIManager {
       if (this.sliderPointerPos >= this.targetZoneLeft && this.sliderPointerPos <= targetRight) {
         // HIT! Capture photo & data!
         MissionInstance.capturePhoto();
-        AudioInstance.playClick();
+        AudioInstance.playHit();
         if (statusEl) {
           statusEl.textContent = "SUCCESSFUL DATA & PHOTO CAPTURE!";
           statusEl.style.color = "#15803d";
@@ -232,7 +290,7 @@ class UIManager {
         }
       } else {
         // MISS!
-        AudioInstance.playClick();
+        AudioInstance.playMiss();
         if (statusEl) {
           statusEl.textContent = "TIMING MISSED! ALIGN POINTER WITH GREY ZONE";
           statusEl.style.color = "#dc2626";
@@ -269,16 +327,20 @@ class UIManager {
 
     // Photo viewer modal actions
     const closeViewerBtn = document.getElementById('btn-viewer-close');
-    closeViewerBtn.addEventListener('click', () => {
-      AudioInstance.playClick();
-      this.toggleModal('photo-viewer-modal', false);
-    });
+    if (closeViewerBtn) {
+      closeViewerBtn.addEventListener('click', () => {
+        AudioInstance.playClick();
+        this.toggleModal('photo-viewer-modal', false);
+      });
+    }
 
     const saveViewerBtn = document.getElementById('btn-viewer-save');
-    saveViewerBtn.addEventListener('click', () => {
-      AudioInstance.playClick();
-      this.downloadActivePhoto();
-    });
+    if (saveViewerBtn) {
+      saveViewerBtn.addEventListener('click', () => {
+        AudioInstance.playClick();
+        this.downloadActivePhoto();
+      });
+    }
 
     // Wire up Mission instance callbacks
     MissionInstance.uiUpdateCallback = this.updateTelemetryDashboard.bind(this);
@@ -471,7 +533,7 @@ class UIManager {
       }
     };
 
-    bindBtn('btn-progress-back', () => GameStateInstance.changeState('MENU'));
+    bindBtn('btn-progress-back', () => GameStateInstance.changeState('LANDING'));
 
     // Register callback hook in GameStateManager
     GameStateInstance.onStateChange = (state) => {
@@ -496,7 +558,7 @@ class UIManager {
       if (progressData[k].completed) completedCount++;
     }
     const completedVal = document.getElementById('completed-missions-val');
-    if (completedVal) completedVal.textContent = `${completedCount} / 5`;
+    if (completedVal) completedVal.textContent = `${completedCount} / 6`;
 
     // Populate mission cards
     const cardsList = document.getElementById('mission-cards-list');
@@ -505,14 +567,15 @@ class UIManager {
     cardsList.innerHTML = '';
 
     const missionNames = {
-      mission_1: "Heliophysics Expedition (Solar Sentinel)",
+      mission_1: "Heliophysics Expedition (IN THE OUTER)",
       mission_2: "Earth to Moon Flight Sequence",
       mission_3: "Mars Lander Probe Injection",
-      mission_4: "Voyager Deep Space Escape Corridor",
-      mission_5: "Europa Ice Core Cryo-Drilling"
+      mission_4: "Telescope Observation & Reconstruction",
+      mission_5: "Planetary Defense (The Asteroid Decision)",
+      mission_6: "MISSION 06 — MERCURY EXPLORER"
     };
 
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 6; i++) {
       const id = `mission_${i}`;
       const m = progressData[id];
       if (!m) continue;
@@ -520,11 +583,11 @@ class UIManager {
       const card = document.createElement('div');
       card.className = `mission-card ${m.unlocked ? '' : 'locked'}`;
       
-      let statusText = "LOCKED";
+      let statusText = `<span class="status-chip locked">${Icons.lock(12)} LOCKED</span>`;
       if (m.completed) {
-        statusText = "✓ COMPLETED";
+        statusText = `<span class="status-chip completed">${Icons.check(12)} COMPLETED</span>`;
       } else if (m.unlocked) {
-        statusText = "▶ UNLOCKED";
+        statusText = `<span class="status-chip unlocked">${Icons.play(10)} UNLOCKED</span>`;
       }
 
       // Draw star shapes based on score/stars count
@@ -532,10 +595,10 @@ class UIManager {
       if (m.completed) {
         const starCount = m.stars || 3;
         for (let s = 0; s < 3; s++) {
-          starsHtml += s < starCount ? "★" : "☆";
+          starsHtml += s < starCount ? Icons.star(14, 'star-gold') : Icons.starOutline(14, 'star-dim');
         }
       } else {
-        starsHtml = "☆☆☆";
+        starsHtml = `${Icons.starOutline(14, 'star-dim')}${Icons.starOutline(14, 'star-dim')}${Icons.starOutline(14, 'star-dim')}`;
       }
 
       card.innerHTML = `
@@ -560,10 +623,16 @@ class UIManager {
             GameStateInstance.selectedSatelliteIndex = -1; // reset selection
             GameStateInstance.changeState('SELECT');
           } else if (i === 2) {
-            GameStateInstance.selectedSatelliteIndex = -1; // resets solar sentinel reference
+            GameStateInstance.selectedSatelliteIndex = -1; // resets probe reference
             GameStateInstance.changeState('EARTH_TO_MOON');
           } else if (i === 3) {
             GameStateInstance.changeState('MARS_ROVER');
+          } else if (i === 4) {
+            GameStateInstance.changeState('TELESCOPE');
+          } else if (i === 5) {
+            GameStateInstance.changeState('PLANETARY_DEFENSE');
+          } else if (i === 6) {
+            GameStateInstance.changeState('MISSION6');
           }
         });
       } else {
@@ -710,6 +779,7 @@ class UIManager {
       // Show explanation
       feedbackEl.classList.remove('hidden');
       if (selectedVal === q.correct) {
+        AudioInstance.playQuizCorrect();
         feedbackEl.innerHTML = `<span style="color: #15803d; font-weight: bold;">[CORRECT]</span><br>${q.explanation}`;
         
         if (q.id === 'Q2') {
@@ -729,6 +799,7 @@ class UIManager {
           actionsEl.appendChild(contBtn);
         }
       } else {
+        AudioInstance.playQuizWrong();
         feedbackEl.innerHTML = `<span style="color: #b91c1c; font-weight: bold;">[INCORRECT]</span><br>Correct Answer: ${q.correct}. ${q.options.find(o => o.val === q.correct).text}<br><br>${q.explanation}`;
         // Add Fail Continue Button
         const contBtn = document.createElement('button');
@@ -809,6 +880,8 @@ class UIManager {
       this.updateMarsHUD();
     };
 
+    MarsRoverMissionInstance.onTogglePause = () => this.toggleMarsPause();
+
     MarsRoverMissionInstance.onToggleDataModal = () => {
       const modal = document.getElementById('mars-data-modal');
       const isVisible = modal && modal.classList.contains('active');
@@ -821,6 +894,30 @@ class UIManager {
     MarsRoverMissionInstance.onDiscovery = (disc) => {
       this.showMarsDiscoveryToast(disc);
     };
+
+    const bindBtn = (id, callback) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          try { AudioInstance.playClick(); } catch(e) {}
+          callback();
+        });
+      }
+    };
+
+    bindBtn('btn-mars-pause', () => this.toggleMarsPause());
+    bindBtn('btn-mars-resume', () => this.toggleMarsPause());
+    bindBtn('btn-mars-exit', () => {
+      this.toggleModal('mars-pause-modal', false);
+      MarsRoverMissionInstance.setPaused(false);
+      MarsRoverMissionInstance.stage = 'SETUP';
+      if (GameStateInstance.isMultiplayer) {
+        GameStateInstance.changeState('LOBBY');
+      } else {
+        GameStateInstance.changeState('PROGRESS');
+      }
+    });
 
     const closeDataBtn = document.getElementById('btn-mars-data-close');
     if (closeDataBtn) {
@@ -837,104 +934,150 @@ class UIManager {
         this.toggleModal('mars-discovery-toast', false);
       });
     }
+  }
 
-    // Mouse click listener for green soil zones during robotic arm test tube sampling
-    window.addEventListener('click', (e) => {
-      if (GameStateInstance.currentState !== 'MARS_ROVER') return;
-      if (!MarsRoverMissionInstance.inSamplingMode) return;
-
-      // Ignore UI panel clicks
-      if (e.target.closest('#mars-hud') || e.target.closest('.modal') || e.target.closest('#audio-toggle')) {
-        return;
-      }
-
-      const mouse = new THREE.Vector2(
-        (e.clientX / window.innerWidth) * 2 - 1,
-        -(e.clientY / window.innerHeight) * 2 + 1
-      );
-
-      const raycaster = new THREE.Raycaster();
-      raycaster.setFromCamera(mouse, CameraInstance.activeCamera);
-
-      const targets = MarsRoverSceneInstance.greenSoilMeshes;
-      if (targets && targets.length > 0) {
-        const intersects = raycaster.intersectObjects(targets, true);
-        if (intersects.length > 0) {
-          const hitObj = intersects[0].object;
-          const zoneIdx = hitObj.userData && hitObj.userData.zoneIndex !== undefined ? hitObj.userData.zoneIndex : 0;
-          MarsRoverMissionInstance.sampleSoilZone(zoneIdx);
-        }
-      }
-    });
+  toggleMarsPause() {
+    const isPaused = MarsRoverMissionInstance.togglePause();
+    this.toggleModal('mars-pause-modal', isPaused);
+    if (GameStateInstance.isMultiplayer) {
+      if (isPaused) MultiplayerInstance.sendPause();
+      else MultiplayerInstance.sendResume();
+    }
   }
 
   updateMarsHUD() {
     const m = MarsRoverMissionInstance;
+    const isSplit = m.isSplitScreen;
 
-    const regEl = document.getElementById('mars-hud-region');
-    if (regEl) regEl.textContent = m.currentRegion.toUpperCase();
+    // 1. UPDATE PLAYER 1 HUD
+    const p1 = m.players[1];
+    if (p1) {
+      const p1Avatar = document.getElementById('p1-avatar');
+      if (p1Avatar) p1Avatar.textContent = (p1.name || 'P1').slice(0, 2).toUpperCase();
 
-    const batEl = document.getElementById('mars-hud-battery');
-    if (batEl) batEl.textContent = `${Math.floor(m.telemetry.battery)}%`;
+      const p1Name = document.getElementById('p1-name');
+      if (p1Name) p1Name.textContent = p1.name;
 
-    const batFill = document.getElementById('mars-hud-battery-fill');
-    if (batFill) batFill.style.width = `${m.telemetry.battery}%`;
+      const p1Score = document.getElementById('p1-score');
+      if (p1Score) p1Score.textContent = p1.score;
 
-    const speedEl = document.getElementById('mars-hud-speed');
-    if (speedEl) speedEl.textContent = `${m.roverSpeed.toFixed(1)} m/s`;
+      const p1Rank = document.getElementById('p1-rank');
+      if (p1Rank) {
+        p1Rank.textContent = p1.rank === 1 ? '1ST PLACE' : '2ND PLACE';
+        p1Rank.className = `p-hud-rank-badge ${p1.rank === 1 ? 'rank-1st' : 'rank-2nd'}`;
+      }
 
-    const tempEl = document.getElementById('mars-hud-temp');
-    if (tempEl) tempEl.textContent = `${m.telemetry.temp}°C`;
+      const reg1 = document.getElementById('mars-hud-region-p1');
+      if (reg1) reg1.textContent = p1.currentRegion.toUpperCase();
 
-    const windEl = document.getElementById('mars-hud-wind');
-    if (windEl) windEl.textContent = `${m.telemetry.wind} km/h`;
+      const batt1 = document.getElementById('mars-hud-battery-p1');
+      if (batt1) batt1.textContent = `${Math.floor(p1.battery)}%`;
 
-    const dustEl = document.getElementById('mars-hud-dust');
-    if (dustEl) dustEl.textContent = m.telemetry.dust.toUpperCase();
+      const spd1 = document.getElementById('mars-hud-speed-p1');
+      if (spd1) spd1.textContent = `${p1.speed.toFixed(1)} m/s`;
 
-    const radEl = document.getElementById('mars-hud-rad');
-    if (radEl) radEl.textContent = `${m.telemetry.radiation.toFixed(2)} mSv/h`;
+      const temp1 = document.getElementById('mars-hud-temp-p1');
+      if (temp1) temp1.textContent = `${m.temperature}°C`;
 
-    const objEl = document.getElementById('mars-hud-objective');
-    if (objEl) objEl.textContent = m.currentObjective;
+      const obj1 = document.getElementById('mars-hud-objective-p1');
+      if (obj1) obj1.textContent = m.getPlayerObjective(1);
 
-    const progressFill = document.getElementById('mars-hud-progress-fill');
-    if (progressFill) progressFill.style.width = `${m.progress}%`;
+      const fill1 = document.getElementById('mars-hud-progress-fill-p1');
+      if (fill1) fill1.style.width = `${m.getPlayerProgress(1)}%`;
 
-    const photoStat = document.getElementById('mars-stat-photos');
-    if (photoStat) photoStat.textContent = `${m.photos.length}/3`;
+      const modeBadge1 = document.getElementById('p1-mode-badge');
+      if (modeBadge1) {
+        if (p1.inViewfinder) {
+          modeBadge1.classList.remove('hidden');
+          modeBadge1.textContent = "PHOTO MODE ACTIVE";
+        } else if (p1.inSamplingMode) {
+          modeBadge1.classList.remove('hidden');
+          modeBadge1.textContent = "SAMPLE MODE ACTIVE";
+        } else {
+          modeBadge1.classList.add('hidden');
+        }
+      }
 
-    const sampleStat = document.getElementById('mars-stat-samples');
-    if (sampleStat) sampleStat.textContent = `${m.samples.length}/3`;
+      this.drawSingleMinimap('mars-minimap-canvas-p1', 1);
+    }
 
-    const scanStat = document.getElementById('mars-stat-scans');
-    if (scanStat) scanStat.textContent = `${m.scannedRegions.size}/3`;
+    // 2. UPDATE PLAYER 2 HUD (IF IN SPLIT-SCREEN)
+    const p2 = m.players[2];
+    if (isSplit && p2) {
+      const p2Avatar = document.getElementById('p2-avatar');
+      if (p2Avatar) p2Avatar.textContent = (p2.name || 'P2').slice(0, 2).toUpperCase();
 
-    const regionStat = document.getElementById('mars-stat-regions');
-    if (regionStat) regionStat.textContent = `${m.discoveredRegions.size}/4`;
+      const p2Name = document.getElementById('p2-name');
+      if (p2Name) p2Name.textContent = p2.name;
 
-    this.drawMarsMinimap();
+      const p2Score = document.getElementById('p2-score');
+      if (p2Score) p2Score.textContent = p2.score;
+
+      const p2Rank = document.getElementById('p2-rank');
+      if (p2Rank) {
+        p2Rank.textContent = p2.rank === 1 ? '1ST PLACE' : '2ND PLACE';
+        p2Rank.className = `p-hud-rank-badge ${p2.rank === 1 ? 'rank-1st' : 'rank-2nd'}`;
+      }
+
+      const reg2 = document.getElementById('mars-hud-region-p2');
+      if (reg2) reg2.textContent = p2.currentRegion.toUpperCase();
+
+      const batt2 = document.getElementById('mars-hud-battery-p2');
+      if (batt2) batt2.textContent = `${Math.floor(p2.battery)}%`;
+
+      const spd2 = document.getElementById('mars-hud-speed-p2');
+      if (spd2) spd2.textContent = `${p2.speed.toFixed(1)} m/s`;
+
+      const temp2 = document.getElementById('mars-hud-temp-p2');
+      if (temp2) temp2.textContent = `${m.temperature}°C`;
+
+      const obj2 = document.getElementById('mars-hud-objective-p2');
+      if (obj2) obj2.textContent = m.getPlayerObjective(2);
+
+      const fill2 = document.getElementById('mars-hud-progress-fill-p2');
+      if (fill2) fill2.style.width = `${m.getPlayerProgress(2)}%`;
+
+      const modeBadge2 = document.getElementById('p2-mode-badge');
+      if (modeBadge2) {
+        if (p2.inViewfinder) {
+          modeBadge2.classList.remove('hidden');
+          modeBadge2.textContent = "PHOTO MODE ACTIVE";
+        } else if (p2.inSamplingMode) {
+          modeBadge2.classList.remove('hidden');
+          modeBadge2.textContent = "SAMPLE MODE ACTIVE";
+        } else {
+          modeBadge2.classList.add('hidden');
+        }
+      }
+
+      this.drawSingleMinimap('mars-minimap-canvas-p2', 2);
+    }
   }
 
-  drawMarsMinimap() {
-    const canvas = document.getElementById('mars-minimap-canvas');
+  drawSingleMinimap(canvasId, playerNum) {
+    const canvas = document.getElementById(canvasId);
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const width = canvas.width;
     const height = canvas.height;
 
     // Clear canvas
-    ctx.fillStyle = '#0f172a';
+    ctx.fillStyle = '#090d14';
     ctx.fillRect(0, 0, width, height);
 
-    // Draw radar circles
-    ctx.strokeStyle = 'rgba(239, 68, 68, 0.25)';
-    ctx.lineWidth = 1;
+    const m = MarsRoverMissionInstance;
+    const p = m.players[playerNum];
+    if (!p) return;
+
     const centerX = width / 2;
     const centerY = height / 2;
+
+    // Radar Circles
+    ctx.strokeStyle = playerNum === 1 ? 'rgba(239, 68, 68, 0.25)' : 'rgba(56, 189, 248, 0.25)';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, 28, 0, Math.PI * 2);
-    ctx.arc(centerX, centerY, 56, 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, 24, 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, 48, 0, Math.PI * 2);
     ctx.stroke();
 
     // Crosshairs
@@ -945,57 +1088,91 @@ class UIManager {
     ctx.lineTo(width, centerY);
     ctx.stroke();
 
-    const m = MarsRoverMissionInstance;
-    const scale = 0.55; // 1 unit in game = 0.55 px on map
-
+    const scale = 0.55;
     const worldToCanvas = (wx, wz) => {
-      const px = centerX + (wx - m.roverPos.x) * scale;
-      const py = centerY + (wz - m.roverPos.z) * scale;
+      const px = centerX + (wx - p.roverX) * scale;
+      const py = centerY + (wz - p.roverZ) * scale;
       return { px, py };
     };
 
     // Draw sample points
-    m.samplePoints.forEach(sp => {
+    m.sampleZones.forEach(sp => {
       const { px, py } = worldToCanvas(sp.x, sp.z);
       if (px >= 0 && px <= width && py >= 0 && py <= height) {
-        ctx.fillStyle = sp.collected ? '#94a3b8' : '#38bdf8';
+        const isCollected = sp.collectedBy.has(playerNum);
+        ctx.fillStyle = isCollected ? '#64748b' : '#38bdf8';
         ctx.beginPath();
-        ctx.arc(px, py, sp.collected ? 3 : 5, 0, Math.PI * 2);
+        ctx.arc(px, py, isCollected ? 3 : 5, 0, Math.PI * 2);
         ctx.fill();
       }
     });
 
-    // Draw Research Anomaly Zone
+    // Draw Anomaly Zone
     const resZone = worldToCanvas(-75, -70);
     if (resZone.px >= 0 && resZone.px <= width && resZone.py >= 0 && resZone.py <= height) {
       ctx.strokeStyle = '#f59e0b';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(resZone.px, resZone.py, 7, 0, Math.PI * 2);
+      ctx.arc(resZone.px, resZone.py, 6, 0, Math.PI * 2);
       ctx.stroke();
     }
 
-    // Draw Rover marker (Center arrow)
+    // Draw Other Player's Rover marker if in range
+    const otherNum = playerNum === 1 ? 2 : 1;
+    const otherP = m.players[otherNum];
+    if (m.isSplitScreen && otherP) {
+      const otherPos = worldToCanvas(otherP.roverX, otherP.roverZ);
+      if (otherPos.px >= 0 && otherPos.px <= width && otherPos.py >= 0 && otherPos.py <= height) {
+        ctx.fillStyle = otherNum === 1 ? '#ef4444' : '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(otherPos.px, otherPos.py, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Draw Player's Own Rover Heading Arrow at Center
     ctx.save();
     ctx.translate(centerX, centerY);
-    ctx.rotate(m.roverAngle);
+    ctx.rotate(-p.roverRotation);
 
-    ctx.fillStyle = '#ef4444';
+    ctx.fillStyle = playerNum === 1 ? '#ef4444' : '#38bdf8';
     ctx.beginPath();
-    ctx.moveTo(0, -7);
-    ctx.lineTo(-5, 6);
-    ctx.lineTo(0, 3);
-    ctx.lineTo(5, 6);
+    ctx.moveTo(0, 7);
+    ctx.lineTo(-5, -6);
+    ctx.lineTo(0, -3);
+    ctx.lineTo(5, -6);
     ctx.closePath();
     ctx.fill();
 
     ctx.restore();
   }
 
+  showMarsSplitOutcome(playerNum, won, finalScore) {
+    const overlay = document.getElementById(`p${playerNum}-outcome-overlay`);
+    const titleEl = document.getElementById(`p${playerNum}-outcome-title`);
+    const subEl = document.getElementById(`p${playerNum}-outcome-sub`);
+    const scoreEl = document.getElementById(`p${playerNum}-outcome-score-val`);
+
+    if (overlay && subEl && scoreEl) {
+      overlay.classList.remove('hidden');
+      scoreEl.textContent = finalScore;
+
+      if (won) {
+        titleEl.textContent = "MISSION COMPLETE";
+        subEl.textContent = "YOU WIN!";
+        subEl.className = "outcome-sub win";
+      } else {
+        titleEl.textContent = "MISSION CONCLUDED";
+        subEl.textContent = "YOU LOSE";
+        subEl.className = "outcome-sub lose";
+      }
+    }
+  }
+
   showMarsDiscoveryToast(disc) {
     const titleEl = document.getElementById('discovery-toast-title');
     const descEl = document.getElementById('discovery-toast-desc');
-    if (titleEl) titleEl.textContent = `★ ${disc.title.toUpperCase()} ★`;
+    if (titleEl) titleEl.innerHTML = `${Icons.star(18, 'star-gold')} <span>${disc.title.toUpperCase()}</span>`;
     if (descEl) descEl.innerHTML = `<strong>LOCATION:</strong> ${disc.region.toUpperCase()}<br>${disc.desc}`;
 
     this.toggleModal('mars-discovery-toast', true);
@@ -1056,6 +1233,423 @@ class UIManager {
 
     html += `</div>`;
     body.innerHTML = html;
+  }
+
+  // -----------------------------------------
+  // MISSION 4: TELESCOPE & RECONSTRUCTION UI
+  // -----------------------------------------
+  setupTelescopeUI() {
+    const tm = TelescopeMissionInstance;
+    tm.resetMission(false);
+
+    const gridEl = document.getElementById('telescope-planet-grid');
+    const beginBtn = document.getElementById('btn-tel-begin-obs');
+    const backBtn = document.getElementById('btn-tel-back');
+    const submitBtn = document.getElementById('btn-tel-submit');
+    const continueBtn = document.getElementById('btn-tel-complete-continue');
+
+    // Show planet selection view initially
+    this.showTelescopeView('telescope-planet-selection');
+
+    if (backBtn) {
+      backBtn.onclick = () => {
+        AudioInstance.playClick();
+        GameStateInstance.changeState('PROGRESS');
+      };
+    }
+
+    const restartBtn = document.getElementById('btn-tel-complete-restart');
+    if (restartBtn) {
+      restartBtn.onclick = () => {
+        AudioInstance.playClick();
+        this.toggleModal('telescope-complete-modal', false);
+        tm.resetMission(true);
+        this.setupTelescopeUI();
+      };
+    }
+
+    if (continueBtn) {
+      continueBtn.onclick = () => {
+        AudioInstance.playClick();
+        this.toggleModal('telescope-complete-modal', false);
+        GameStateInstance.changeState('PROGRESS');
+      };
+    }
+
+    // Render 8 Planet Cards with Real 2D Planet Pictures
+    if (gridEl) {
+      gridEl.innerHTML = '';
+      tm.planets.forEach(planet => {
+        const card = document.createElement('div');
+        const isCompleted = tm.completedPlanetIds.has(planet.id);
+        card.className = `obs-planet-card font-mono ${isCompleted ? 'completed' : ''}`;
+        card.dataset.planetId = planet.id;
+
+        const thumbUrl = TelescopeVisualsInstance.getPlanetThumbnail(planet.id);
+
+        card.innerHTML = `
+          <div class="planet-thumb-wrapper" style="background: url('${thumbUrl}') center/cover no-repeat;"></div>
+          <div class="planet-card-title">${planet.name}</div>
+          <div class="planet-card-detail">${planet.detail}</div>
+          <div class="planet-card-badge ${isCompleted ? '' : 'hidden'}">${isCompleted ? `${Icons.check(12)} DONE` : Icons.check(12)}</div>
+        `;
+
+        card.onclick = () => {
+          if (isCompleted) {
+            AudioInstance.playScienceBeep();
+            return;
+          }
+          const selected = tm.selectPlanet(planet.id);
+          if (selected) {
+            // Update UI card selection styling
+            const allCards = gridEl.querySelectorAll('.obs-planet-card');
+            allCards.forEach(c => {
+              if (!c.classList.contains('completed')) {
+                c.classList.remove('selected');
+                c.classList.add('subdued');
+                const b = c.querySelector('.planet-card-badge');
+                if (b) b.classList.add('hidden');
+              }
+            });
+
+            card.classList.remove('subdued');
+            card.classList.add('selected');
+            const badge = card.querySelector('.planet-card-badge');
+            if (badge) badge.classList.remove('hidden');
+
+            if (beginBtn) {
+              beginBtn.classList.remove('disabled');
+              beginBtn.removeAttribute('disabled');
+            }
+          }
+        };
+
+        gridEl.appendChild(card);
+      });
+    }
+
+    // BEGIN OBSERVATION CLICK
+    if (beginBtn) {
+      beginBtn.disabled = true;
+      beginBtn.classList.add('disabled');
+
+      beginBtn.onclick = () => {
+        if (!tm.selectedPlanet) return;
+        AudioInstance.playClick();
+
+        this.showTelescopeView('telescope-observation-view');
+
+        const planetNameEl = document.getElementById('tel-obs-planet-name');
+        if (planetNameEl) planetNameEl.textContent = tm.selectedPlanet.name.toUpperCase();
+
+        const viewportImg = document.getElementById('telescope-2d-img');
+
+        // Callbacks for observation steps
+        tm.onPhaseChange = (phaseIdx, imgUrl) => {
+          const phaseTracker = document.getElementById('tel-obs-phase-tracker');
+          const badgeText = document.getElementById('tel-obs-badge-text');
+
+          if (viewportImg) viewportImg.src = imgUrl;
+          if (phaseTracker) phaseTracker.textContent = `VIEW ${phaseIdx + 1} / 5`;
+          if (badgeText) badgeText.textContent = `OBSERVING ${tm.selectedPlanet.name.toUpperCase()} — PHASE ${phaseIdx + 1} RECORDED`;
+        };
+
+        tm.onObservationComplete = () => {
+          const badgeText = document.getElementById('tel-obs-badge-text');
+          if (badgeText) badgeText.textContent = `OBSERVATION COMPLETE! PREPARING RECONSTRUCTION...`;
+
+          setTimeout(() => {
+            this.showTelescopeView('telescope-reconstruction-view');
+            this.renderReconstructionBoard();
+          }, 1200);
+        };
+
+        tm.startObservation(document.getElementById('telescope-2d-img'));
+      };
+    }
+
+    // CIRCULAR RIGHT-ARROW NEXT PHASE BUTTON CLICK
+    const nextPhaseBtn = document.getElementById('btn-tel-next-phase');
+    if (nextPhaseBtn) {
+      nextPhaseBtn.onclick = () => {
+        if (tm.stage === 'OBSERVING') {
+          tm.nextPhase();
+        }
+      };
+    }
+
+    // SUBMIT BUTTON CLICK
+    if (submitBtn) {
+      submitBtn.onclick = () => {
+        if (submitBtn.classList.contains('disabled')) return;
+
+        const res = tm.submitVerification();
+        const toast = document.getElementById('telescope-toast');
+        const toastContent = document.getElementById('telescope-toast-content');
+
+        if (res.success) {
+          if (res.isFirstTry) {
+            // First-try victory: Full mission complete!
+            if (toastContent) {
+              toastContent.innerHTML = `
+                <div style="color: #22c55e; font-size: 1.2rem; margin-bottom: 4px; display: flex; align-items: center; justify-content: center; gap: 6px;">${Icons.check(18)} FIRST-TRY MASTERY ACHIEVED!</div>
+                <div style="color: #cbd5e1; font-size: 0.9rem;">You reconstructed ${tm.selectedPlanet.name} perfectly on your first try!</div>
+              `;
+            }
+            if (toast) toast.classList.remove('hidden');
+
+            const compPlanet = document.getElementById('tel-complete-planet');
+            if (compPlanet) compPlanet.textContent = `PLANET OBSERVED: ${tm.selectedPlanet.name.toUpperCase()}`;
+
+            setTimeout(() => {
+              if (toast) toast.classList.add('hidden');
+              this.toggleModal('telescope-complete-modal', true);
+            }, 800);
+          } else {
+            // Multi-try victory on this planet: return to selection screen to pick an uncompleted planet
+            if (toastContent) {
+              toastContent.innerHTML = `
+                <div style="color: #f59e0b; font-size: 1.2rem; margin-bottom: 4px; display: flex; align-items: center; justify-content: center; gap: 6px;">${Icons.check(18)} ${res.planetName.toUpperCase()} RECONSTRUCTED</div>
+                <div style="color: #cbd5e1; font-size: 0.9rem;">Since this required retries, select a NEW planet to achieve First-Try Mastery!</div>
+              `;
+            }
+            if (toast) toast.classList.remove('hidden');
+
+            setTimeout(() => {
+              if (toast) toast.classList.add('hidden');
+              this.setupTelescopeUI();
+            }, 2500);
+          }
+        } else {
+          if (toastContent) {
+            toastContent.innerHTML = `
+              <div style="color: #ef4444; font-size: 1.2rem; margin-bottom: 4px;">OBSERVATION MISMATCH</div>
+              <div style="color: #cbd5e1; font-size: 0.9rem;">The sequence does not match your recorded observation. Try again!</div>
+            `;
+          }
+          if (toast) toast.classList.remove('hidden');
+
+          // Highlight drop boxes red
+          const boxes = document.querySelectorAll('.drop-box');
+          boxes.forEach(b => b.classList.add('incorrect'));
+
+          setTimeout(() => {
+            if (toast) toast.classList.add('hidden');
+            boxes.forEach(b => b.classList.remove('incorrect'));
+          }, 2000);
+        }
+      };
+    }
+  }
+
+  showTelescopeView(viewId) {
+    const views = document.querySelectorAll('.telescope-view');
+    views.forEach(v => {
+      if (v.id === viewId) {
+        v.classList.remove('hidden');
+        v.classList.add('active');
+      } else {
+        v.classList.add('hidden');
+        v.classList.remove('active');
+      }
+    });
+  }
+
+  renderReconstructionBoard() {
+    const tm = TelescopeMissionInstance;
+    const stackEl = document.getElementById('telescope-cards-stack');
+    const boxes = document.querySelectorAll('.drop-box');
+
+    // Clear boxes
+    boxes.forEach(box => {
+      box.classList.remove('occupied', 'drag-over', 'incorrect');
+      box.innerHTML = `<span class="box-slot-num">${parseInt(box.dataset.slot) + 1}</span>`;
+    });
+
+    // Render ONLY the top card in deck stack
+    if (stackEl) {
+      stackEl.innerHTML = '';
+      if (tm.deckCards.length > 0) {
+        const topCardObj = tm.deckCards[0];
+        const cardEl = this.createPhaseCardDOM(topCardObj);
+        stackEl.appendChild(cardEl);
+      } else {
+        stackEl.innerHTML = `<div class="cards-stack-empty-msg">ALL CARDS PLACED</div>`;
+      }
+    }
+
+    this.updateSubmitButtonState();
+    this.setupDragAndDrop();
+  }
+
+  createPhaseCardDOM(cardObj) {
+    const cardEl = document.createElement('div');
+    cardEl.className = 'phase-card font-mono';
+
+    // Store reference object on element
+    cardEl._cardData = cardObj;
+
+    cardEl.innerHTML = `
+      <img class="phase-card-img" src="${cardObj.imgUrl}" alt="${cardObj.planetName}">
+      <div class="phase-card-title">${cardObj.planetName}</div>
+    `;
+
+    return cardEl;
+  }
+
+  setupDragAndDrop() {
+    const tm = TelescopeMissionInstance;
+    const boxes = document.querySelectorAll('.drop-box');
+
+    let draggedCard = null;
+    let dragProxy = null;
+
+    const onPointerDown = (e) => {
+      const cardEl = e.target.closest('.phase-card');
+      if (!cardEl) return;
+
+      e.preventDefault();
+      draggedCard = cardEl;
+
+      // Create floating drag proxy with solitaire card dimensions (135x190)
+      dragProxy = cardEl.cloneNode(true);
+      dragProxy.classList.add('dragging');
+      dragProxy.style.position = 'fixed';
+      dragProxy.style.pointerEvents = 'none';
+      dragProxy.style.zIndex = '10000';
+      dragProxy.style.left = `${e.clientX - 67}px`;
+      dragProxy.style.top = `${e.clientY - 95}px`;
+      dragProxy.style.transform = 'scale(1.08)';
+      document.body.appendChild(dragProxy);
+
+      cardEl.style.opacity = '0.35';
+    };
+
+    const onPointerMove = (e) => {
+      if (!dragProxy || !draggedCard) return;
+      e.preventDefault();
+
+      dragProxy.style.left = `${e.clientX - 67}px`;
+      dragProxy.style.top = `${e.clientY - 95}px`;
+
+      // Check drop box under pointer
+      const elemBelow = document.elementFromPoint(e.clientX, e.clientY);
+      boxes.forEach(b => b.classList.remove('drag-over'));
+      if (elemBelow) {
+        const dropBox = elemBelow.closest('.drop-box');
+        if (dropBox) dropBox.classList.add('drag-over');
+      }
+    };
+
+    const onPointerUp = (e) => {
+      if (!dragProxy || !draggedCard) return;
+
+      const cardObj = draggedCard._cardData;
+      const elemBelow = document.elementFromPoint(e.clientX, e.clientY);
+      boxes.forEach(b => b.classList.remove('drag-over'));
+
+      let droppedSlotIdx = -1;
+      if (elemBelow) {
+        const dropBox = elemBelow.closest('.drop-box');
+        if (dropBox) {
+          droppedSlotIdx = parseInt(dropBox.dataset.slot);
+        }
+      }
+
+      // Cleanup drag proxy
+      if (dragProxy && dragProxy.parentNode) {
+        dragProxy.parentNode.removeChild(dragProxy);
+      }
+      dragProxy = null;
+      if (draggedCard) {
+        draggedCard.style.opacity = '1';
+      }
+
+      if (droppedSlotIdx !== -1) {
+        this.handleCardDrop(cardObj, droppedSlotIdx);
+      } else {
+        // Also support click-to-place: if clicked deck card, place in first empty slot
+        const deckIdx = tm.deckCards.indexOf(cardObj);
+        if (deckIdx !== -1) {
+          const emptySlotIdx = tm.placedSlots.findIndex(s => s === null);
+          if (emptySlotIdx !== -1) {
+            this.handleCardDrop(cardObj, emptySlotIdx);
+          }
+        }
+      }
+      draggedCard = null;
+    };
+
+    // Remove old listeners and attach global pointer events
+    if (this._telPointerMove) window.removeEventListener('pointermove', this._telPointerMove);
+    if (this._telPointerUp) window.removeEventListener('pointerup', this._telPointerUp);
+
+    this._telPointerMove = onPointerMove;
+    this._telPointerUp = onPointerUp;
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+
+    // Attach pointerdown to deck cards & placed cards
+    document.querySelectorAll('.phase-card').forEach(c => {
+      c.onpointerdown = onPointerDown;
+    });
+  }
+
+  handleCardDrop(cardObj, slotIdx, cardDomEl) {
+    const tm = TelescopeMissionInstance;
+    const success = tm.placeCardInSlot(cardObj, slotIdx);
+
+    if (success) {
+      // Re-render placed slots
+      const boxes = document.querySelectorAll('.drop-box');
+      boxes.forEach((box, idx) => {
+        const slotCard = tm.placedSlots[idx];
+        box.innerHTML = '';
+
+        if (slotCard) {
+          box.classList.add('occupied');
+          const dom = this.createPhaseCardDOM(slotCard);
+          box.appendChild(dom);
+        } else {
+          box.classList.remove('occupied');
+          box.innerHTML = `<span class="box-slot-num">${idx + 1}</span>`;
+        }
+      });
+
+      // Update stack deck (render top card only)
+      const stackEl = document.getElementById('telescope-cards-stack');
+      if (stackEl) {
+        stackEl.innerHTML = '';
+        if (tm.deckCards.length > 0) {
+          const topCardObj = tm.deckCards[0];
+          const dom = this.createPhaseCardDOM(topCardObj);
+          stackEl.appendChild(dom);
+        } else {
+          stackEl.innerHTML = `<div class="cards-stack-empty-msg">ALL CARDS PLACED</div>`;
+        }
+      }
+
+      this.updateSubmitButtonState();
+      this.setupDragAndDrop();
+    }
+  }
+
+  updateSubmitButtonState() {
+    const tm = TelescopeMissionInstance;
+    const submitBtn = document.getElementById('btn-tel-submit');
+    if (!submitBtn) return;
+
+    // Enable SUBMIT button ONLY when all 5 slots are filled with cards
+    const allFilled = tm.placedSlots.every(slot => slot !== null);
+
+    if (allFilled) {
+      submitBtn.classList.remove('disabled');
+      submitBtn.removeAttribute('disabled');
+    } else {
+      submitBtn.classList.add('disabled');
+      submitBtn.setAttribute('disabled', 'true');
+    }
   }
 }
 

@@ -135,6 +135,7 @@ class EarthToMoonMission {
       if (questionId === 'Q1') {
         this.stage = 'LAUNCH';
         this.objective = "Launching spacecraft...";
+        AudioInstance.playLaunchRumble();
       } else if (questionId === 'Q3') {
         this.stage = 'DEPLOYMENT';
         this.objective = "Deploying communications satellite...";
@@ -142,14 +143,17 @@ class EarthToMoonMission {
       } else if (questionId === 'Q4') {
         this.stage = 'TRANSFER';
         this.objective = "Navigating deep space transfer corridor...";
+        AudioInstance.playThrusterPulse();
       } else if (questionId === 'Q5') {
         this.stage = 'DESCENT';
         this.descentCountdown = -1; // telemetry restored flag
         this.countdown = 200.0; // altitude at 200m for final landing approach
         this.progress = 97;
         this.objective = "TELEMETRY RESTORED. Descending to landing pad...";
+        AudioInstance.playThrusterPulse();
       } else if (questionId === 'Q2') {
         this.progress = 100;
+        AudioInstance.playTouchdown();
         this.completeMissionNow();
       }
     } else {

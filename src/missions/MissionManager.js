@@ -134,7 +134,7 @@ class MissionManager {
     // Add HUD overlay telemetry marks onto photo
     ctx.font = '14px monospace';
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(`SOLAR SENTINEL // TELEMETRY FRAME ${fileIndex}`, 20, 35);
+    ctx.fillText(`IN THE OUTER // TELEMETRY FRAME ${fileIndex}`, 20, 35);
     ctx.fillText(`FILTER: SDO_EUV_${171 + fileIndex*22}A`, 20, 55);
     ctx.fillText(`OBSERVATION: ${observation.time}`, 20, 75);
     ctx.fillText(`TEMP ${observation.temperature} K  |  RAD ${observation.radiation} W/m²`, 20, 475);
@@ -259,7 +259,7 @@ class MissionManager {
       distance: sat.distanceFromSun.toFixed(3),
       activity: sat.solarActivity,
       time: new Date().toLocaleTimeString(),
-      status: 'SOLAR SENTINEL // NOMINAL'
+      status: 'IN THE OUTER // NOMINAL'
     };
   }
 }

@@ -1,20 +1,31 @@
 class ProgressManager {
   constructor() {
-    this.storageKey = 'solar_sentinel_mission_progress';
+    this.storageKey = 'in_the_outer_mission_progress';
     this.progress = this.loadProgress();
   }
 
   loadProgress() {
-    const stored = localStorage.getItem(this.storageKey);
+    if (typeof localStorage === 'undefined') {
+      return {
+        mission_1: { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: true },
+        mission_2: { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: false },
+        mission_3: { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: false },
+        mission_4: { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: false },
+        mission_5: { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: false },
+        mission_6: { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: false }
+      };
+    }
+    const stored = localStorage.getItem(this.storageKey) || localStorage.getItem('solar_sentinel_mission_progress');
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        // Ensure mission_2 exists (upgrade path if user already has save)
-        if (parsed && !parsed.mission_2) {
-          parsed.mission_2 = { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: parsed.mission_1?.completed || false };
-          parsed.mission_3 = { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: false };
-          parsed.mission_4 = { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: false };
-          parsed.mission_5 = { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: false };
+        // Ensure mission_2..mission_6 exist (upgrade path if user already has save)
+        if (parsed) {
+          if (!parsed.mission_2) parsed.mission_2 = { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: parsed.mission_1?.completed || false };
+          if (!parsed.mission_3) parsed.mission_3 = { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: false };
+          if (!parsed.mission_4) parsed.mission_4 = { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: false };
+          if (!parsed.mission_5) parsed.mission_5 = { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: false };
+          if (!parsed.mission_6) parsed.mission_6 = { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: parsed.mission_5?.completed || false };
           this.saveProgressData(parsed);
         }
         return parsed;
@@ -29,13 +40,15 @@ class ProgressManager {
       mission_2: { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: false },
       mission_3: { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: false },
       mission_4: { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: false },
-      mission_5: { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: false }
+      mission_5: { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: false },
+      mission_6: { completed: false, score: 0, stars: 0, bestTime: "--", unlocked: false }
     };
     this.saveProgressData(defaultProgress);
     return defaultProgress;
   }
 
   saveProgressData(data) {
+    if (typeof localStorage === 'undefined') return;
     localStorage.setItem(this.storageKey, JSON.stringify(data));
   }
 
@@ -81,7 +94,7 @@ class ProgressManager {
   getOverallPercent() {
     const data = this.loadProgress();
     let completedCount = 0;
-    const total = 5;
+    const total = 6;
     for (let i = 1; i <= total; i++) {
       if (data[`mission_${i}`] && data[`mission_${i}`].completed) {
         completedCount++;

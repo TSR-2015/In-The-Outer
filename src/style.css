@@ -1,4 +1,4 @@
-/* Minimalist Black and White Styling System for Solar Sentinel */
+/* Minimalist Black and White Styling System for IN THE OUTER */
 
 :root {
   --bg-space: #050505;
@@ -60,27 +60,42 @@ body, html {
   text-overflow: ellipsis;
 }
 
-/* Minimalist Audio Control Widget */
+/* Aerospace HUD Audio Control Widget */
 .audio-btn {
   position: fixed;
-  top: 20px;
+  top: 18px;
   left: 20px;
-  background: var(--color-white);
-  border: var(--border-thin);
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
   padding: 8px 14px;
-  color: var(--color-black);
+  color: #e2e8f0;
   font-family: var(--font-mono);
   font-size: 0.75rem;
   font-weight: 700;
+  letter-spacing: 0.08em;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   cursor: pointer;
   z-index: 100;
-  transition: var(--transition-smooth);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .audio-btn:hover {
-  background: var(--color-black);
-  color: var(--color-white);
+  background: rgba(30, 41, 59, 0.98);
+  border-color: #38bdf8;
+  color: #38bdf8;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.3);
   transform: translateY(-1px);
+}
+
+.audio-btn:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 /* Screens Layout */
@@ -861,21 +876,22 @@ body, html {
 .mission-cards-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   margin-bottom: 20px;
-  max-height: 350px;
+  max-height: 480px;
   overflow-y: auto;
-  padding-right: 5px;
+  padding-right: 8px;
 }
 
 .mission-card {
   display: flex;
   flex-direction: column;
-  border: var(--border-thin);
+  border: 2px solid var(--color-black);
   background: var(--bg-panel);
-  padding: 15px;
+  padding: 20px;
+  min-height: 110px;
   cursor: pointer;
-  box-shadow: 3px 3px 0px rgba(0, 0, 0, 1);
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 1);
   transition: var(--transition-smooth);
 }
 
@@ -1149,7 +1165,74 @@ body, html {
   color: var(--color-black);
   text-align: center;
 }
-/* Brief, non-blocking shutter flash for a scientific observation capture. */
+/* ----------------------------------------- */
+/* MARS CAMERA VIEWFINDER — "REAL CAMERA" FX */
+/* ----------------------------------------- */
+.rec-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  margin-right: 4px;
+  animation: rec-blink 1.1s steps(1) infinite;
+}
+
+@keyframes rec-blink {
+  0%, 55% { opacity: 1; }
+  56%, 100% { opacity: 0.15; }
+}
+
+.viewfinder-battery-shell {
+  display: inline-block;
+  width: 46px;
+  height: 10px;
+  border: 1px solid #22c55e;
+  border-radius: 2px;
+  padding: 1px;
+  vertical-align: middle;
+}
+
+.viewfinder-battery-fill {
+  display: block;
+  height: 100%;
+  background: #22c55e;
+  border-radius: 1px;
+  transition: width 0.3s ease;
+}
+
+.viewfinder-reticle {
+  transition: border-color 0.15s ease;
+}
+
+.viewfinder-captured-banner {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -10px);
+  background: rgba(34, 197, 94, 0.95);
+  color: #04150a;
+  font-weight: 900;
+  font-size: 0.95rem;
+  padding: 8px 18px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Applied for ~700ms right after a photo is taken: the reticle "locks" and
+   a confirmation banner pops in, instead of instantly cutting back to drive view. */
+#mars-camera-viewfinder.viewfinder-captured .viewfinder-reticle {
+  border-color: rgba(239, 68, 68, 0.9);
+}
+
+#mars-camera-viewfinder.viewfinder-captured .viewfinder-captured-banner {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
 #solar-capture-flash {
   position: fixed;
   inset: 0;
@@ -1168,3 +1251,2227 @@ body, html {
   12% { opacity: 0.7; }
   100% { opacity: 0; }
 }
+
+/* ----------------------------------------- */
+/* MISSION 4: TELESCOPE & RECONSTRUCTION     */
+/* ----------------------------------------- */
+#telescope-screen {
+  background: radial-gradient(ellipse at 50% 20%, #1e1b4b 0%, #0c1021 60%, #030712 100%),
+              radial-gradient(circle at 80% 80%, rgba(56, 189, 248, 0.08) 0%, transparent 50%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding-bottom: 80px;
+}
+
+.telescope-view {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.telescope-planet-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 20px;
+}
+
+@media (max-width: 900px) {
+  .telescope-planet-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.obs-planet-card {
+  position: relative;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  min-height: 240px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+}
+
+.obs-planet-card:hover:not(.completed) {
+  transform: translateY(-6px);
+  border-color: #38bdf8;
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+}
+
+.obs-planet-card.selected {
+  border-color: #22c55e;
+  box-shadow: 0 0 30px rgba(34, 197, 94, 0.6);
+  transform: scale(1.03);
+  background: linear-gradient(145deg, rgba(6, 78, 59, 0.6), rgba(15, 23, 42, 0.95));
+}
+
+.obs-planet-card.subdued {
+  opacity: 0.45;
+  filter: grayscale(40%);
+}
+
+.obs-planet-card.completed {
+  opacity: 0.55;
+  cursor: not-allowed;
+  border-color: #475569;
+  filter: grayscale(50%);
+  box-shadow: none;
+}
+
+.obs-planet-card.completed:hover {
+  transform: none;
+  border-color: #475569;
+  box-shadow: none;
+}
+
+.planet-thumb-wrapper {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  margin-bottom: 14px;
+  position: relative;
+  box-shadow: inset -12px -12px 24px rgba(0,0,0,0.85), 0 0 20px rgba(0,0,0,0.6);
+}
+
+/* Planet-inspired card textures */
+.planet-tex-mercury { background: radial-gradient(circle at 30% 30%, #a39e93, #4a453e); border: 2px solid #78716c; }
+.planet-tex-venus { background: radial-gradient(circle at 30% 30%, #fef08a, #ca8a04); border: 2px solid #eab308; }
+.planet-tex-earth { background: radial-gradient(circle at 30% 30%, #60a5fa, #1e3a8a); border: 2px solid #3b82f6; }
+.planet-tex-mars { background: radial-gradient(circle at 30% 30%, #f97316, #7c2d12); border: 2px solid #ea580c; }
+.planet-tex-jupiter { background: repeating-linear-gradient(0deg, #fde047 0px, #b45309 8px, #fed7aa 16px, #78350f 24px); border: 2px solid #d97706; }
+.planet-tex-saturn { background: radial-gradient(circle at 30% 30%, #fef9c3, #ca8a04); border: 2px solid #eab308; }
+.planet-tex-uranus { background: radial-gradient(circle at 30% 30%, #a5f3fc, #0891b2); border: 2px solid #06b6d4; }
+.planet-tex-neptune { background: radial-gradient(circle at 30% 30%, #60a5fa, #1e40af); border: 2px solid #2563eb; }
+
+.planet-card-title {
+  font-weight: 900;
+  font-size: 1.15rem;
+  color: #fff;
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+}
+
+.planet-card-detail {
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+.planet-card-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #22c55e;
+  color: #000;
+  font-size: 0.8rem;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+/* TELESCOPE LENS VIEWPORT */
+.telescope-viewport-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 15px 0;
+}
+
+.circular-arrow-btn {
+  position: absolute;
+  right: calc(50% - 250px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.95);
+  border: 3px solid #38bdf8;
+  color: #38bdf8;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+  transition: all 0.25s ease;
+  z-index: 100;
+}
+
+.circular-arrow-btn:hover {
+  transform: translateY(-50%) scale(1.15);
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #ffffff;
+  box-shadow: 0 0 35px rgba(56, 189, 248, 0.8);
+}
+
+.telescope-lens-frame {
+  position: relative;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  border: 12px solid #1e293b;
+  box-shadow: 0 0 50px rgba(56, 189, 248, 0.25), inset 0 0 30px rgba(0, 0, 0, 0.9);
+  overflow: hidden;
+  background: #020617;
+}
+
+.telescope-2d-view-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.lens-glass-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 60%),
+              radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.85) 100%);
+  pointer-events: none;
+}
+
+.lens-reticle-crosshair {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.lens-reticle-crosshair::before, .lens-reticle-crosshair::after {
+  content: '';
+  position: absolute;
+  background: rgba(56, 189, 248, 0.35);
+}
+
+.lens-reticle-crosshair::before {
+  top: 50%; left: 10%; right: 10%; height: 1px;
+}
+
+.lens-reticle-crosshair::after {
+  left: 50%; top: 10%; bottom: 10%; width: 1px;
+}
+
+.lens-aperture-ring {
+  position: absolute;
+  inset: 20px;
+  border: 1px dashed rgba(56, 189, 248, 0.4);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* RECONSTRUCTION BOARD & 5 GREY DROP BOXES */
+.drop-boxes-container {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.drop-boxes-row {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.drop-box {
+  width: 135px;
+  height: 190px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 2px dashed #475569;
+  border-radius: 12px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+}
+
+.drop-box .box-slot-num {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+}
+
+.drop-box.drag-over {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.2);
+  transform: scale(1.05);
+}
+
+.drop-box.occupied {
+  border-style: solid;
+  border-color: #38bdf8;
+  background: rgba(15, 23, 42, 0.95);
+  padding: 0;
+}
+
+.drop-box.incorrect {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.2);
+  animation: box-shake 0.4s ease;
+}
+
+@keyframes box-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+.east-west-indicator {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 800;
+  letter-spacing: 2px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+/* DRAGGABLE CARDS DECK (SOLITAIRE DECK STACK AT BOTTOM CENTER) */
+.reconstruct-deck-area {
+  margin-top: 25px;
+  text-align: center;
+}
+
+.deck-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+.cards-stack {
+  position: relative;
+  width: 135px;
+  height: 190px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cards-stack .phase-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+}
+
+.cards-stack-empty-msg {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.phase-card {
+  width: 135px;
+  height: 190px;
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  border: 2px solid #38bdf8;
+  border-radius: 12px;
+  padding: 10px;
+  box-sizing: border-box;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.phase-card:active {
+  cursor: grabbing;
+}
+
+.phase-card.dragging {
+  opacity: 0.95;
+  transform: scale(1.08) rotate(2deg);
+  box-shadow: 0 12px 30px rgba(56, 189, 248, 0.7);
+  z-index: 10000;
+}
+
+.phase-card-img {
+  width: 105px;
+  height: 105px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #000;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: inset -6px -6px 12px rgba(0,0,0,0.8), 0 0 10px rgba(0,0,0,0.6);
+  pointer-events: none;
+}
+
+.phase-card-title {
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+/* GREEN GOOEY LIQUID SUBMIT BUTTON (BOTTOM-RIGHT) */
+.gooey-submit-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 40px;
+  background: linear-gradient(135deg, #22c55e, #15803d);
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  padding: 16px 36px;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 0 25px rgba(34, 197, 94, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+  transition: all 0.3s ease;
+  z-index: 500;
+}
+
+.gooey-submit-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+  background: #334155;
+}
+
+.gooey-submit-btn:not(.disabled):hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 35px rgba(34, 197, 94, 0.9), inset 0 2px 6px rgba(255, 255, 255, 0.6);
+}
+
+.telescope-toast {
+  position: fixed;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(3, 7, 18, 0.95);
+  border: 2px solid #38bdf8;
+  color: #fff;
+  padding: 14px 28px;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 800;
+  z-index: 9999;
+  box-shadow: 0 0 30px rgba(56, 189, 248, 0.4);
+}
+
+/* ----------------------------------------- */
+/* MISSION 5: PLANETARY DEFENSE STYLES       */
+/* ----------------------------------------- */
+#planetary-defense-screen {
+  background: #020617;
+  overflow: hidden;
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* TOP TACTICAL HUD BAR */
+.pd-top-bar {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(10, 16, 30, 0.88);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 8px;
+  padding: 8px 16px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.pd-top-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pd-badge-mission {
+  background: #38bdf8;
+  color: #020617;
+  font-weight: 900;
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+
+.pd-header-title {
+  color: #f8fafc;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 1.5px;
+}
+
+/* COMMS ROSTER BADGES */
+.pd-top-center {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.pd-roster-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #64748b;
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  background: rgba(15, 23, 42, 0.6);
+  opacity: 0.55;
+  transition: all 0.3s ease;
+}
+
+.pd-roster-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #64748b;
+  transition: all 0.3s ease;
+}
+
+.pd-roster-badge.active {
+  color: #22c55e;
+  border-color: #22c55e;
+  background: rgba(6, 78, 59, 0.4);
+  opacity: 1.0;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+}
+
+.pd-roster-badge.active .pd-roster-dot {
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+  animation: pd-pulse 1.2s infinite;
+}
+
+@keyframes pd-pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* TOP TOOL BUTTONS */
+.pd-top-right {
+  display: flex;
+  gap: 8px;
+}
+
+.pd-tool-btn {
+  background: rgba(30, 41, 59, 0.75);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pd-tool-btn:hover {
+  background: #38bdf8;
+  color: #020617;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+}
+
+.pd-tool-btn.muted {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+.pd-dbg-btn {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.pd-dbg-btn:hover {
+  background: #f59e0b;
+  color: #000;
+}
+
+/* DEV DEBUG HUD OVERLAY */
+.pd-debug-overlay {
+  position: absolute;
+  top: 70px;
+  right: 20px;
+  background: rgba(3, 7, 18, 0.94);
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+  padding: 10px 14px;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+  font-size: 0.72rem;
+  color: #cbd5e1;
+}
+
+.pd-debug-title {
+  color: #f59e0b;
+  font-weight: 900;
+  border-bottom: 1px solid rgba(245, 158, 11, 0.4);
+  padding-bottom: 4px;
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+}
+
+.pd-debug-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pd-debug-grid strong {
+  color: #38bdf8;
+}
+
+/* DECISION CONFIRMATION SUSPENSE BANNER */
+.pd-decision-confirm-banner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 580px;
+  text-align: center;
+  animation: pd-fade-in 0.3s ease;
+}
+
+.pd-confirm-box {
+  background: rgba(3, 7, 18, 0.96);
+  border: 2px solid #22c55e;
+  border-radius: 12px;
+  padding: 28px 24px;
+  box-shadow: 0 0 50px rgba(34, 197, 94, 0.6);
+}
+
+.pd-confirm-tag {
+  color: #22c55e;
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.pd-confirm-choice {
+  color: #fef08a;
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.pd-confirm-sub {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+}
+
+@keyframes pd-fade-in {
+  from { opacity: 0; transform: translate(-50%, -46%); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+/* DIALOGUE PANEL */
+.pd-dialogue-panel {
+  position: absolute;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 92%;
+  max-width: 880px;
+  background: rgba(10, 16, 32, 0.94);
+  border: 2px solid #38bdf8;
+  border-radius: 12px;
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 0 40px rgba(56, 189, 248, 0.35);
+  backdrop-filter: blur(10px);
+}
+
+.pd-portrait-wrapper {
+  width: 105px;
+  height: 105px;
+  border-radius: 50%;
+  border: 3px solid #38bdf8;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #090d16;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+  transition: all 0.3s ease;
+}
+
+.pd-portrait-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pd-dialogue-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pd-speaker-header {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.3);
+  padding-bottom: 4px;
+}
+
+.pd-speaker-name {
+  font-weight: 900;
+  font-size: 1.15rem;
+  color: #38bdf8;
+  letter-spacing: 1px;
+}
+
+.pd-speaker-role {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  letter-spacing: 1px;
+}
+
+.pd-audio-indicator {
+  margin-left: auto;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #22c55e;
+  letter-spacing: 1px;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid #22c55e;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.pd-dialogue-text {
+  font-size: 1.05rem;
+  line-height: 1.5;
+  color: #f8fafc;
+}
+
+/* DECISION PANEL OVERLAY */
+.pd-decision-panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 660px;
+}
+
+.pd-decision-card {
+  background: rgba(3, 7, 18, 0.96) !important;
+  border: 2px solid #38bdf8 !important;
+  box-shadow: 0 0 50px rgba(56, 189, 248, 0.5) !important;
+  padding: 28px !important;
+  border-radius: 12px;
+}
+
+.pd-decision-title {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #38bdf8;
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+}
+
+.pd-decision-sub {
+  font-size: 0.88rem;
+  color: #94a3b8;
+  margin-bottom: 20px;
+}
+
+.pd-decision-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pd-decision-btn {
+  background: rgba(15, 23, 42, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 14px 18px;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.pd-decision-btn:hover {
+  background: rgba(6, 78, 59, 0.65);
+  border-color: #22c55e;
+  transform: translateX(6px);
+  box-shadow: 0 0 24px rgba(34, 197, 94, 0.5);
+}
+
+.pd-btn-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.pd-btn-key {
+  color: #f59e0b;
+  font-weight: 900;
+  font-size: 1.05rem;
+}
+
+.pd-btn-title {
+  font-weight: 900;
+  font-size: 1.05rem;
+  color: #22c55e;
+}
+
+.pd-btn-desc {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  line-height: 1.4;
+  padding-left: 32px;
+}
+
+/* RESPONSIVE STYLING FOR MOBILE */
+@media (max-width: 768px) {
+  .pd-top-bar {
+    flex-direction: column;
+    gap: 8px;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    padding: 6px 10px;
+  }
+  .pd-header-title {
+    display: none;
+  }
+  .pd-dialogue-panel {
+    bottom: 12px;
+    padding: 10px 14px;
+    gap: 12px;
+    width: 96%;
+  }
+  .pd-portrait-wrapper {
+    width: 72px;
+    height: 72px;
+  }
+  .pd-speaker-name {
+    font-size: 0.95rem;
+  }
+  .pd-dialogue-text {
+    font-size: 0.88rem;
+    line-height: 1.4;
+  }
+  .pd-decision-card {
+    padding: 18px !important;
+  }
+  .pd-decision-title {
+    font-size: 1.1rem;
+  }
+}
+
+/* ----------------------------------------- */
+/* MISSION 6: MERCURY EXPLORER               */
+/* ----------------------------------------- */
+#mission6-screen {
+  background: #02040a;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* =========================================================
+   AIRCONSOLE MULTIPLAYER LOBBY & TOP BADGE STYLES
+   ========================================================= */
+
+.top-room-badge {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10, 14, 20, 0.88);
+  backdrop-filter: blur(6px);
+  border: 1px solid #38bdf8;
+  color: #38bdf8;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  padding: 6px 18px;
+  border-radius: 20px;
+  z-index: 100;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+  pointer-events: none;
+}
+
+/* Hide global audio toggle during Mars Rover mission to avoid HUD overlap */
+body:has(#mars-hud:not(.hidden)) #audio-toggle {
+  display: none !important;
+}
+
+/* =========================================================
+   LANDING PAGE: COSMIC PARALLAX & GLASSMORPHISM
+   ========================================================= */
+#landing-page {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 30%, #0c1424 0%, #050810 65%, #020408 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+/* Parallax Universe Layers */
+.landing-parallax-universe {
+  position: absolute;
+  inset: -60px;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.parallax-layer {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+  transition: transform 0.15s cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+.layer-deep-stars {
+  background-image: 
+    radial-gradient(1px 1px at 25px 35px, #ffffff, rgba(255, 255, 255, 0)),
+    radial-gradient(1px 1px at 75px 120px, #a5b4fc, rgba(255, 255, 255, 0)),
+    radial-gradient(1.5px 1.5px at 160px 80px, #38bdf8, rgba(255, 255, 255, 0)),
+    radial-gradient(1px 1px at 220px 240px, #fbcfe8, rgba(255, 255, 255, 0)),
+    radial-gradient(1.5px 1.5px at 310px 180px, #ffffff, rgba(255, 255, 255, 0)),
+    radial-gradient(1px 1px at 450px 320px, #38bdf8, rgba(255, 255, 255, 0));
+  background-size: 500px 500px;
+  opacity: 0.7;
+  animation: cosmic-star-twinkle 6s infinite ease-in-out alternate;
+}
+
+.layer-mid-stars {
+  background-image: 
+    radial-gradient(2px 2px at 90px 40px, #ffffff, rgba(255, 255, 255, 0)),
+    radial-gradient(2px 2px at 180px 210px, #38bdf8, rgba(255, 255, 255, 0)),
+    radial-gradient(2.5px 2.5px at 320px 110px, #f59e0b, rgba(255, 255, 255, 0)),
+    radial-gradient(2px 2px at 410px 280px, #818cf8, rgba(255, 255, 255, 0));
+  background-size: 450px 450px;
+  opacity: 0.85;
+}
+
+.layer-nebula {
+  background: 
+    radial-gradient(circle at 50% 20%, rgba(56, 189, 248, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 20% 70%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 80% 65%, rgba(225, 29, 72, 0.1) 0%, transparent 45%);
+  filter: blur(40px);
+  opacity: 0.8;
+  animation: nebula-drift 20s infinite alternate ease-in-out;
+}
+
+.layer-cosmic-dust {
+  background: radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+}
+
+@keyframes cosmic-star-twinkle {
+  0% { opacity: 0.5; transform: scale(0.98); }
+  50% { opacity: 0.9; }
+  100% { opacity: 0.6; transform: scale(1.02); }
+}
+
+@keyframes nebula-drift {
+  0% { transform: scale(1) translate(0, 0); }
+  50% { transform: scale(1.08) translate(-15px, 10px); }
+  100% { transform: scale(1) translate(15px, -10px); }
+}
+
+/* Landing Content Container */
+.landing-content {
+  position: relative;
+  z-index: 5;
+  max-width: 960px;
+  width: 90%;
+  margin: 0 auto;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* System Status Pill Badge */
+.landing-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #7dd3fc;
+  margin-bottom: 18px;
+}
+
+.status-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 10px #22c55e;
+  animation: pulse-dot 1.8s infinite ease-in-out;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+/* Hero Title */
+.landing-title {
+  font-size: clamp(2.8rem, 7vw, 5.2rem);
+  font-weight: 900;
+  letter-spacing: clamp(6px, 1.2vw, 12px);
+  line-height: 1.05;
+  background: linear-gradient(180deg, #ffffff 25%, #cbd5e1 60%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 35px rgba(56, 189, 248, 0.3));
+  margin: 0 0 10px 0;
+  text-transform: uppercase;
+}
+
+.landing-tagline {
+  font-size: clamp(0.85rem, 1.8vw, 1.15rem);
+  letter-spacing: 5px;
+  color: #94a3b8;
+  margin-bottom: 40px;
+  text-transform: uppercase;
+}
+
+/* Mode Selection Cards: Pure Glassmorphism */
+.landing-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 28px;
+  width: 100%;
+  max-width: 840px;
+  margin-bottom: 34px;
+}
+
+@media (max-width: 768px) {
+  .landing-mode-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
+
+.mode-select-btn.glass-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding: 32px 28px;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 20px;
+  box-shadow: 
+    0 16px 40px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #f8fafc;
+}
+
+.mode-select-btn.glass-card:hover {
+  transform: translateY(-6px) scale(1.015);
+  background: rgba(22, 33, 58, 0.7);
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: 
+    0 24px 50px rgba(0, 0, 0, 0.65),
+    0 0 30px rgba(56, 189, 248, 0.25),
+    inset 0 1px 2px rgba(255, 255, 255, 0.35);
+}
+
+.single-player-card:hover {
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.65), 0 0 35px rgba(56, 189, 248, 0.3);
+}
+
+.multiplayer-card:hover {
+  border-color: rgba(168, 85, 247, 0.6);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.65), 0 0 35px rgba(168, 85, 247, 0.3);
+}
+
+.mode-glow-accent {
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.8), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.multiplayer-card .mode-glow-accent {
+  background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.8), transparent);
+}
+
+.mode-select-btn.glass-card:hover .mode-glow-accent {
+  opacity: 1;
+}
+
+.mode-icon-well {
+  width: 58px;
+  height: 58px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.mode-select-btn.glass-card:hover .mode-icon-well {
+  transform: scale(1.1);
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.multiplayer-card:hover .mode-icon-well {
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
+.mode-icon {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.mode-tag {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #38bdf8;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.multiplayer-card .mode-tag {
+  color: #c084fc;
+}
+
+.mode-title {
+  font-size: 1.55rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.mode-desc {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  line-height: 1.45;
+  margin-bottom: 18px;
+}
+
+.mode-action-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #38bdf8;
+  margin-top: auto;
+  transition: gap 0.2s ease;
+}
+
+.multiplayer-card .mode-action-link {
+  color: #c084fc;
+}
+
+.mode-select-btn.glass-card:hover .mode-action-link {
+  gap: 14px;
+}
+
+/* Glassmorphic Footer Action Buttons */
+.landing-footer-actions {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.menu-sub-btn.glass-pill {
+  padding: 10px 24px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  color: #cbd5e1;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.menu-sub-btn.glass-pill:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), 0 0 16px rgba(255, 255, 255, 0.2);
+}
+
+/* =========================================================
+   AIRCONSOLE MULTIPLAYER LOBBY SCREEN
+   ========================================================= */
+#lobby-screen {
+  background: radial-gradient(circle at 50% 50%, #0d1420 0%, #03060a 100%);
+  z-index: 50;
+}
+
+.lobby-panel {
+  max-width: 620px;
+  width: 92%;
+  background: #090d14;
+  border: 2px solid #233144;
+  border-radius: 12px;
+  padding: 32px 28px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+
+.lobby-proto-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  margin-bottom: 8px;
+}
+
+.lobby-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: #ffffff;
+  margin-bottom: 4px;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+.lobby-subtitle {
+  font-size: 0.85rem;
+  letter-spacing: 3px;
+  color: #38bdf8;
+  margin-bottom: 20px;
+}
+
+.lobby-code-box {
+  background: #04060a;
+  border: 2px solid #0284c7;
+  border-radius: 8px;
+  padding: 18px;
+  margin-bottom: 18px;
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.8), 0 0 20px rgba(2, 132, 199, 0.25);
+}
+
+.lobby-code-label {
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.lobby-room-code {
+  font-size: 4.2rem;
+  font-weight: 900;
+  letter-spacing: 8px;
+  color: #38bdf8;
+  text-shadow: 0 0 24px rgba(56, 189, 248, 0.7);
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+
+/* =========================================================
+   LOBBY NEUMORPHIC QR CODE STYLING & ANIMATIONS
+   ========================================================= */
+.lobby-qr-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 18px 0;
+}
+
+/* Neumorphic Extruded Outer Plate */
+.lobby-qr-neumorphic-plate {
+  background: #0d131f;
+  border-radius: 24px;
+  padding: 16px;
+  box-shadow: 
+    14px 14px 28px #04070c,
+    -14px -14px 28px #162033,
+    inset 1px 1px 1px rgba(255, 255, 255, 0.08);
+  display: inline-block;
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.lobby-qr-neumorphic-plate:hover {
+  transform: scale(1.02);
+  box-shadow: 
+    16px 16px 32px #030509,
+    -16px -16px 32px #19253b,
+    0 0 24px rgba(56, 189, 248, 0.25),
+    inset 1px 1px 1px rgba(255, 255, 255, 0.12);
+}
+
+/* Neumorphic Inset Well for the QR Code Canvas */
+.lobby-qr-inset-well {
+  background: #080c14;
+  border-radius: 16px;
+  padding: 12px;
+  box-shadow: 
+    inset 6px 6px 12px #030508,
+    inset -6px -6px 12px #101724;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#lobby-qr-canvas {
+  display: block;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  background: #ffffff;
+}
+
+/* High-Tech Animated Laser Scanning Line */
+.qr-laser-line {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #38bdf8, #818cf8, #38bdf8, transparent);
+  box-shadow: 0 0 12px #38bdf8, 0 0 20px #818cf8;
+  z-index: 10;
+  pointer-events: none;
+  animation: qrLaserScan 2.8s ease-in-out infinite alternate;
+}
+
+@keyframes qrLaserScan {
+  0% {
+    top: 14px;
+    opacity: 0.2;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: calc(100% - 17px);
+    opacity: 0.2;
+  }
+}
+
+/* High-Tech HUD Optical Reticle Corners */
+.qr-reticle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #38bdf8;
+  pointer-events: none;
+  z-index: 11;
+  animation: reticlePulse 2s infinite ease-in-out;
+}
+
+.qr-reticle.corner-tl {
+  top: 8px; left: 8px;
+  border-right: none; border-bottom: none;
+}
+.qr-reticle.corner-tr {
+  top: 8px; right: 8px;
+  border-left: none; border-bottom: none;
+}
+.qr-reticle.corner-bl {
+  bottom: 8px; left: 8px;
+  border-right: none; border-top: none;
+}
+.qr-reticle.corner-br {
+  bottom: 8px; right: 8px;
+  border-left: none; border-top: none;
+}
+
+@keyframes reticlePulse {
+  0%, 100% { opacity: 0.5; filter: drop-shadow(0 0 2px #38bdf8); }
+  50% { opacity: 1; filter: drop-shadow(0 0 8px #38bdf8); }
+}
+
+.lobby-instructions {
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  letter-spacing: 1px;
+  line-height: 1.5;
+}
+
+.lobby-url-link {
+  color: #38bdf8;
+  text-decoration: underline;
+  font-weight: 700;
+}
+
+.lobby-waiting-box {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 18px;
+}
+
+.lobby-waiting-text {
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #e2e8f0;
+}
+
+.lobby-players-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 22px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.lobby-empty-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px;
+  border: 1px dashed #334155;
+  border-radius: 6px;
+  color: #64748b;
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+}
+
+.lobby-player-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 10px 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.lobby-player-card.master {
+  border-color: #f59e0b;
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, #0f172a 100%);
+}
+
+.lobby-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #3b82f6 0%, #1d4ed8 70%);
+  border: 1.5px solid #60a5fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 0.95rem;
+  color: #ffffff;
+}
+
+.lobby-pinfo {
+  flex: 1;
+  text-align: left;
+  margin-left: 12px;
+}
+
+.lobby-pname {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lobby-prole {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.lobby-pstatus.online {
+  color: #22c55e;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.lobby-pstatus.offline {
+  color: #ef4444;
+  font-size: 0.75rem;
+}
+
+/* =========================================================
+   MARS SPLIT-SCREEN MULTIPLAYER HUD
+   ========================================================= */
+
+.split-screen-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background: rgba(34, 197, 94, 0.8);
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
+  z-index: 80;
+  pointer-events: none;
+}
+
+.camera-flash-overlay {
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 150;
+  transition: opacity 0.2s ease;
+}
+
+.mars-viewport-hud {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 40;
+}
+
+/* Player 1 Viewport (Left) */
+.mars-viewport-hud.p1-hud {
+  left: 0;
+  width: 100%; /* In 1-player mode full width */
+}
+/* When split-screen is active */
+.split-active .mars-viewport-hud.p1-hud {
+  width: 50%;
+}
+.split-active .mars-viewport-hud.p2-hud {
+  left: 50%;
+  width: 50%;
+  display: block !important;
+}
+
+/* =========================================================
+   MARS ROVER TOP COMMAND BAR (UNIFIED & NON-OVERLAPPING)
+   ========================================================= */
+.mars-top-command-bar {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: rgba(10, 15, 26, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 8px 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  pointer-events: auto;
+  z-index: 20;
+}
+
+/* In single-player mode, leave room on right for the pause button */
+.p1-hud:not(.split-active) .mars-top-command-bar {
+  padding-right: 124px;
+}
+
+/* Left: Identity Pod */
+.mars-identity-pod {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 170px;
+}
+
+.mars-identity-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.p-hud-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #e11d48 0%, #9f1239 100%);
+  border: 2px solid #fb7185;
+  color: #fff;
+  font-weight: 900;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.p-hud-avatar.p2-color {
+  background: radial-gradient(circle at 35% 30%, #0284c7 0%, #0c4a6e 100%);
+  border-color: #38bdf8;
+}
+
+.p-hud-name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: 1px;
+}
+
+.p-hud-rover-tag {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+
+/* Center: Telemetry Chips Strip */
+.mars-telemetry-chips {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(5, 8, 14, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 6px 14px;
+}
+
+.mars-telem-chip {
+  display: flex;
+  flex-direction: column;
+  padding: 0 8px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mars-telem-chip:last-child {
+  border-right: none;
+}
+
+.mars-telem-chip .chip-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #64748b;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.mars-telem-chip .chip-val {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  letter-spacing: 0.5px;
+}
+
+.chip-val.region-p1 {
+  color: #ef4444;
+}
+
+.chip-val.region-p2 {
+  color: #38bdf8;
+}
+
+.chip-val.battery-val {
+  color: #4ade80;
+}
+
+/* Right: Score & Rank Pod */
+.mars-score-pod {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 150px;
+  justify-content: flex-end;
+}
+
+.mars-score-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.mars-score-meta .chip-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #64748b;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.p-hud-score-val {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #f8fafc;
+  letter-spacing: 1px;
+}
+
+.p-hud-rank-badge {
+  font-size: 0.68rem;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+.rank-1st {
+  background: #f59e0b;
+  color: #000;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+.rank-2nd {
+  background: #64748b;
+  color: #fff;
+}
+
+/* Minimap Panel */
+.p-minimap-panel {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(5, 8, 12, 0.92);
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 6px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+  pointer-events: auto;
+}
+
+.minimap-title {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+}
+
+/* Objective Card */
+.p-objective-card {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  max-width: 320px;
+  width: calc(100% - 210px);
+  background: rgba(10, 14, 20, 0.9);
+  border: var(--border-thin);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+}
+
+.objective-header {
+  color: #94a3b8;
+  font-size: 0.68rem;
+  margin-bottom: 2px;
+}
+
+.objective-body {
+  font-weight: 700;
+  color: #38bdf8;
+  line-height: 1.3;
+}
+
+/* Mode Alert Badge */
+.p-mode-badge {
+  position: absolute;
+  top: 130px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(225, 29, 72, 0.9);
+  border: 1px solid #fda4af;
+  color: #fff;
+  font-weight: 900;
+  font-size: 0.82rem;
+  letter-spacing: 1.5px;
+  padding: 6px 16px;
+  border-radius: 20px;
+  box-shadow: 0 0 14px rgba(225, 29, 72, 0.8);
+  pointer-events: none;
+}
+
+/* Viewport Outcome Overlay (YOU WIN / YOU LOSE) */
+.viewport-outcome-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 6, 10, 0.82);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 120;
+  pointer-events: auto;
+}
+
+.outcome-box {
+  background: #090d14;
+  border: 2px solid #22c55e;
+  border-radius: 12px;
+  padding: 24px 32px;
+  text-align: center;
+  box-shadow: 0 0 35px rgba(34, 197, 94, 0.5);
+}
+
+.outcome-box.lose {
+  border-color: #ef4444;
+  box-shadow: 0 0 35px rgba(239, 68, 68, 0.5);
+}
+
+.outcome-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.outcome-sub {
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  margin-bottom: 12px;
+}
+.outcome-sub.win { color: #22c55e; }
+.outcome-sub.lose { color: #ef4444; }
+
+.outcome-score {
+  font-size: 1rem;
+  color: #f8fafc;
+}
+
+/* Mars Pause Button: Sleek Aerospace Tactical Pod */
+.mars-pause-btn {
+  position: absolute;
+  top: 18px;
+  right: 28px;
+  z-index: 200;
+  height: 40px;
+  padding: 0 16px;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #f8fafc;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  pointer-events: auto;
+  transition: all 0.2s ease;
+}
+
+.mars-pause-btn .pause-symbol {
+  font-size: 1.15rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.mars-pause-btn:hover {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+.split-active .mars-pause-btn {
+  left: 50%;
+  transform: translateX(-50%);
+  right: auto;
+  top: 18px;
+}
+.split-active .mars-pause-btn:hover {
+  transform: translateX(-50%) translateY(-1px);
+}
+
+.split-active .mars-viewport-hud.p1-hud .mars-top-command-bar {
+  right: 60px;
+  padding-right: 14px;
+}
+
+.split-active .mars-viewport-hud.p2-hud .mars-top-command-bar {
+  left: 60px;
+  padding-left: 14px;
+}
+
+/* =========================================================
+   PROFESSIONAL GAME UI DESIGN SYSTEM — BUTTON HIERARCHY
+   Clean geometry, aerospace chamfer, concrete feedback states
+   ========================================================= */
+
+.game-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: #0f172a;
+  color: #f8fafc;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  text-decoration: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 3px 6px rgba(0, 0, 0, 0.45);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+/* Height variations */
+.game-btn, .btn-md {
+  height: 40px;
+  padding: 0 20px;
+}
+.game-btn.btn-lg {
+  height: 48px;
+  padding: 0 28px;
+  font-size: 0.92rem;
+  letter-spacing: 0.1em;
+}
+.game-btn.btn-sm {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+}
+
+/* Primary Action Button (Dominant Cyan / Aerospace Blue) */
+.game-btn.btn-primary,
+.brief-btn.next,
+.auth-btn-join {
+  background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%);
+  border-color: #38bdf8;
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 12px rgba(2, 132, 199, 0.35);
+}
+.game-btn.btn-primary:hover,
+.brief-btn.next:hover,
+.auth-btn-join:hover {
+  background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%);
+  border-color: #7dd3fc;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 6px 18px rgba(14, 165, 233, 0.55);
+  transform: translateY(-1px);
+}
+.game-btn.btn-primary:active,
+.game-btn.btn-primary.is-pressed,
+.brief-btn.next:active,
+.auth-btn-join:active {
+  background: linear-gradient(180deg, #0369a1 0%, #075985 100%);
+  border-color: #0284c7;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.2);
+  transform: translateY(2px);
+}
+
+/* Secondary Action Button (Obsidian Slate / High-Tech Frame) */
+.game-btn.btn-secondary,
+.brief-btn.back,
+.landing-sub-btn,
+.menu-sub-btn {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #e2e8f0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.game-btn.btn-secondary:hover,
+.brief-btn.back:hover,
+.landing-sub-btn:hover,
+.menu-sub-btn:hover {
+  background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 4px 12px rgba(0, 0, 0, 0.55);
+  transform: translateY(-1px);
+}
+.game-btn.btn-secondary:active,
+.game-btn.btn-secondary.is-pressed,
+.brief-btn.back:active {
+  background: #0f172a;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.2);
+  transform: translateY(2px);
+}
+
+/* Destructive / Exit Action Button (Tactical Red) */
+.game-btn.btn-destructive,
+.game-btn.btn-exit {
+  background: linear-gradient(180deg, #991b1b 0%, #7f1d1d 100%);
+  border-color: #f87171;
+  color: #fef2f2;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 12px rgba(185, 28, 28, 0.35);
+}
+.game-btn.btn-destructive:hover,
+.game-btn.btn-exit:hover {
+  background: linear-gradient(180deg, #b91c1c 0%, #991b1b 100%);
+  border-color: #fca5a5;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 6px 16px rgba(220, 38, 38, 0.5);
+  transform: translateY(-1px);
+}
+.game-btn.btn-destructive:active,
+.game-btn.btn-exit:active {
+  background: #7f1d1d;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.2);
+  transform: translateY(2px);
+}
+
+/* Success Action Button */
+.game-btn.btn-success {
+  background: linear-gradient(180deg, #15803d 0%, #166534 100%);
+  border-color: #4ade80;
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 12px rgba(22, 163, 74, 0.35);
+}
+.game-btn.btn-success:hover {
+  background: linear-gradient(180deg, #16a34a 0%, #15803d 100%);
+  border-color: #86efac;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 6px 18px rgba(34, 197, 94, 0.5);
+  transform: translateY(-1px);
+}
+.game-btn.btn-success:active {
+  background: #14532d;
+  transform: translateY(2px);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Disabled & Inactive States */
+.game-btn:disabled,
+.game-btn.is-disabled,
+.brief-btn:disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  filter: grayscale(0.8);
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* Focus State */
+.game-btn:focus-visible,
+.brief-btn:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 3px;
+}
+
+/* Tech Chamfer corner decoration */
+.btn-chamfer {
+  clip-path: polygon(
+    0 4px,
+    4px 0,
+    calc(100% - 4px) 0,
+    100% 4px,
+    100% calc(100% - 4px),
+    calc(100% - 4px) 100%,
+    4px 100%,
+    0 calc(100% - 4px)
+  );
+}
+
+/* Vector Icon styling inside buttons and headers */
+.ui-icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.mode-icon-svg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #38bdf8;
+}
+
+.star-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.star-gold {
+  color: #f59e0b;
+}
+
+.star-dim {
+  color: #475569;
+}
+
+/* Status Chips for Mission Progression */
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.status-chip.completed {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.5);
+  color: #4ade80;
+}
+
+.status-chip.unlocked {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  color: #38bdf8;
+}
+
+.status-chip.locked {
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: #64748b;
+}
+
+.badge-master {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.3));
+  border: 1px solid #f59e0b;
+  color: #fbbf24;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
+}
+
+/* Refined Neomorphic QR Container */
+.qr-frame-box {
+  background: radial-gradient(circle at 50% 50%, #0d1525 0%, #060a12 100%);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 
+    14px 14px 32px rgba(0, 0, 0, 0.8),
+    -8px -8px 24px rgba(255, 255, 255, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 30px rgba(56, 189, 248, 0.15);
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.qr-laser-line {
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #38bdf8 50%, transparent 100%);
+  box-shadow: 0 0 12px #38bdf8, 0 0 20px rgba(56, 189, 248, 0.8);
+  animation: qrLaserScan 2.4s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes qrLaserScan {
+  0% { top: 8%; opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { top: 92%; opacity: 0.4; }
+}
+
+/* Aerospace HUD Reticle Corners */
+.hud-corner-tl, .hud-corner-tr, .hud-corner-bl, .hud-corner-br {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: #38bdf8;
+  border-style: solid;
+  pointer-events: none;
+}
+.hud-corner-tl { top: 6px; left: 6px; border-width: 2px 0 0 2px; }
+.hud-corner-tr { top: 6px; right: 6px; border-width: 2px 2px 0 0; }
+.hud-corner-bl { bottom: 6px; left: 6px; border-width: 0 0 2px 2px; }
+.hud-corner-br { bottom: 6px; right: 6px; border-width: 0 2px 2px 0; }

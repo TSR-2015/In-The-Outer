@@ -15,6 +15,12 @@ import { EarthToMoonMissionInstance } from '../missions/EarthToMoonMission.js';
 import { EarthToMoonSceneInstance } from '../scene/EarthToMoonScene.js';
 import { MarsRoverMissionInstance } from '../missions/MarsRoverMission.js';
 import { MarsRoverSceneInstance } from '../scene/MarsRoverScene.js';
+import { UIInstance } from '../ui/UIManager.js';
+import { PlanetaryDefenseSceneInstance } from '../scene/PlanetaryDefenseScene.js';
+import { PlanetaryDefenseUIInstance } from '../ui/PlanetaryDefenseUI.js';
+import { MercurySceneInstance } from '../mission6/MercuryScene.js';
+import { Mission6UIInstance } from '../mission6/Mission6UI.js';
+import { Mission6StateInstance } from '../mission6/Mission6State.js';
 
 class GameStateManager {
   constructor() {
@@ -26,6 +32,7 @@ class GameStateManager {
     this.menuSatRef = null;
     this.menuSatRadius = 36.0;
     this.menuSatSpeed = 0.9;
+    this.isMultiplayer = false;
   }
 
   init() {
@@ -39,12 +46,15 @@ class GameStateManager {
         document.getElementById('loading-status').textContent = status;
       },
       () => {
-        this.changeState('MENU');
+        this.changeState('LANDING');
       }
     );
   }
 
   changeState(newState) {
+    if (this.currentState && this.currentState !== 'LOADING') {
+      AudioInstance.playTransition();
+    }
     this.currentState = newState;
     console.log(`[State Transition]: ${newState}`);
 
@@ -77,6 +87,20 @@ class GameStateManager {
         document.getElementById('loading-screen').classList.add('active');
         break;
 
+      case 'LANDING':
+        const landingPage = document.getElementById('landing-page');
+        if (landingPage) landingPage.classList.add('active');
+        AudioInstance.startAmbientHum();
+        this.setupMenuScene();
+        break;
+
+      case 'LOBBY':
+        const lobbyScreen = document.getElementById('lobby-screen');
+        if (lobbyScreen) lobbyScreen.classList.add('active');
+        AudioInstance.startAmbientHum();
+        this.setupMenuScene();
+        break;
+
       case 'MENU':
         document.getElementById('main-menu').classList.add('active');
         AudioInstance.startAmbientHum();
@@ -106,6 +130,27 @@ class GameStateManager {
         this.setupMarsRoverScene();
         break;
 
+      case 'TELESCOPE':
+        const telScreen = document.getElementById('telescope-screen');
+        if (telScreen) telScreen.classList.add('active');
+        UIInstance.setupTelescopeUI();
+        break;
+
+      case 'PLANETARY_DEFENSE':
+        const pdScreen = document.getElementById('planetary-defense-screen');
+        if (pdScreen) pdScreen.classList.add('active');
+        PlanetaryDefenseSceneInstance.init(document.getElementById('pd-canvas-container'));
+        PlanetaryDefenseUIInstance.init();
+        break;
+
+      case 'MISSION6':
+        const m6Screen = document.getElementById('mission6-screen');
+        if (m6Screen) m6Screen.classList.add('active');
+        MercurySceneInstance.init(document.getElementById('mission6-canvas-container'));
+        Mission6UIInstance.init();
+        Mission6StateInstance.startMission();
+        break;
+
       case 'COMPLETE':
         document.getElementById('mission-complete-screen').classList.add('active');
         this.setupCompleteScene();
@@ -118,6 +163,7 @@ class GameStateManager {
   }
 
   cleanupStateScene() {
+    MarsRoverSceneInstance.cleanup();
     const removeList = [];
     EngineInstance.scene.traverse((obj) => {
       if (obj.name === "menu_elements" || obj.name === "orbit_elements") {
@@ -289,27 +335,49 @@ class GameStateManager {
     MarsRoverSceneInstance.init(EngineInstance.scene);
     MarsRoverMissionInstance.startMission();
 
-    MarsRoverMissionInstance.onMissionComplete = () => {
-      const minutes = Math.floor(MarsRoverMissionInstance.elapsedTime / 60);
-      const seconds = Math.floor(MarsRoverMissionInstance.elapsedTime % 60);
-      const ms = Math.floor((MarsRoverMissionInstance.elapsedTime % 1) * 100);
-      const doubleDigit = (v) => v < 10 ? `0${v}` : v;
-      const timerVal = `${doubleDigit(minutes)}:${doubleDigit(seconds)}.${doubleDigit(ms)}`;
+    const isSplit = MarsRoverMissionInstance.isSplitScreen;
+    const marsHud = document.getElementById('mars-hud');
+    const divider = document.getElementById('mars-split-divider');
+    const p2Hud = document.getElementById('mars-hud-p2');
 
-      ProgressInstance.completeMission('mission_3', MarsRoverMissionInstance.score, 3, timerVal);
+    if (isSplit) {
+      if (marsHud) marsHud.classList.add('split-active');
+      if (divider) divider.classList.remove('hidden');
+      if (p2Hud) p2Hud.classList.remove('hidden');
+    } else {
+      if (marsHud) marsHud.classList.remove('split-active');
+      if (divider) divider.classList.add('hidden');
+      if (p2Hud) p2Hud.classList.add('hidden');
+    }
 
-      this.lastCompletedMission = 3;
+    MarsRoverMissionInstance.onMissionComplete = (finishedPlayerNum, winnerNum) => {
+      if (MarsRoverMissionInstance.isSplitScreen) {
+        const p1Won = winnerNum === 1;
+        const p2Won = winnerNum === 2;
+        UIInstance.showMarsSplitOutcome(1, p1Won, MarsRoverMissionInstance.players[1].score);
+        UIInstance.showMarsSplitOutcome(2, p2Won, MarsRoverMissionInstance.players[2].score);
+      } else {
+        const minutes = Math.floor(MarsRoverMissionInstance.elapsedTime / 60);
+        const seconds = Math.floor(MarsRoverMissionInstance.elapsedTime % 60);
+        const ms = Math.floor((MarsRoverMissionInstance.elapsedTime % 1) * 100);
+        const doubleDigit = (v) => v < 10 ? `0${v}` : v;
+        const timerVal = `${doubleDigit(minutes)}:${doubleDigit(seconds)}.${doubleDigit(ms)}`;
 
-      // Show the mission complete summary screen first
-      document.getElementById('summary-time').textContent = timerVal;
-      document.getElementById('summary-score').textContent = MarsRoverMissionInstance.score;
-      const summaryImagesEl = document.getElementById('summary-images');
-      if (summaryImagesEl) summaryImagesEl.textContent = `${MarsRoverMissionInstance.photos.length} / 3`;
+        ProgressInstance.completeMission('mission_3', MarsRoverMissionInstance.score, 3, timerVal);
 
-      document.querySelector('#mission-complete-screen h1').textContent = "SURFACE MISSION COMPLETE";
-      document.querySelector('#mission-complete-screen .tagline').textContent = "MARS ROVER EXPEDITION SUCCESSFULLY CONCLUDED";
+        this.lastCompletedMission = 3;
 
-      this.changeState('COMPLETE');
+        // Show the mission complete summary screen first
+        document.getElementById('summary-time').textContent = timerVal;
+        document.getElementById('summary-score').textContent = MarsRoverMissionInstance.score;
+        const summaryImagesEl = document.getElementById('summary-images');
+        if (summaryImagesEl) summaryImagesEl.textContent = `${MarsRoverMissionInstance.photos.length} / 3`;
+
+        document.querySelector('#mission-complete-screen h1').textContent = "SURFACE MISSION COMPLETE";
+        document.querySelector('#mission-complete-screen .tagline').textContent = "MARS ROVER EXPEDITION SUCCESSFULLY CONCLUDED";
+
+        this.changeState('COMPLETE');
+      }
     };
   }
 
@@ -337,7 +405,7 @@ class GameStateManager {
   }
 
   update(delta, time) {
-    if (this.currentState === 'MENU' || this.currentState === 'SELECT' || this.currentState === 'PROGRESS') {
+    if (this.currentState === 'MENU' || this.currentState === 'SELECT' || this.currentState === 'PROGRESS' || this.currentState === 'LOBBY') {
       SolarSystemInstance.update(delta, time);
       
       if (this.menuSatRef) {
@@ -374,6 +442,10 @@ class GameStateManager {
     } else if (this.currentState === 'MARS_ROVER') {
       MarsRoverSceneInstance.update(delta, time);
       MarsRoverMissionInstance.update(delta);
+    } else if (this.currentState === 'MISSION6') {
+      MercurySceneInstance.update(delta, time);
+      Mission6StateInstance.update(delta);
+      Mission6UIInstance.update(delta, time);
     } else if (this.currentState === 'COMPLETE') {
       if (this.lastCompletedMission === 3) {
         MarsRoverSceneInstance.update(delta, time);

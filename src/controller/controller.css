@@ -1,0 +1,889 @@
+/* =========================================================
+   IN THE OUTER // PHYSICAL MISSION CONTROLLER STYLING
+   Hardware aesthetic: Molded matte composite, brushed aluminum,
+   tactile rubber D-pad, beveled polycarbonate face buttons.
+   ========================================================= */
+
+:root {
+  --chassis-bg: #12151c;
+  --chassis-border: #1e2430;
+  --bezel-dark: #0a0d12;
+  --bezel-highlight: #2c3545;
+  --well-bg: #090c10;
+  
+  --led-green: #22c55e;
+  --led-green-glow: rgba(34, 197, 94, 0.6);
+  --led-amber: #f59e0b;
+  --led-red: #ef4444;
+
+  --btn-a-red: #e11d48;
+  --btn-a-red-light: #fb7185;
+  --btn-a-red-dark: #881337;
+
+  --btn-b-blue: #0284c7;
+  --btn-b-blue-light: #38bdf8;
+  --btn-b-blue-dark: #0c4a6e;
+
+  --btn-c-green: #059669;
+  --btn-c-green-light: #34d399;
+  --btn-c-green-dark: #064e3b;
+
+  --dpad-surface: #1e232e;
+  --dpad-surface-dark: #13171f;
+  --dpad-highlight: #333d4e;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  background-color: #06080b;
+  font-family: 'Share Tech Mono', 'Inter', monospace, sans-serif;
+  color: #e2e8f0;
+  touch-action: manipulation;
+}
+
+/* =========================================================
+   CONTROLLER ENCLOSURE / BODY
+   ========================================================= */
+.controller-enclosure {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  background: 
+    radial-gradient(ellipse at 50% 0%, #1a2230 0%, #0d1117 75%),
+    linear-gradient(180deg, #161b24 0%, #0b0e14 100%);
+  border-left: 2px solid #232b38;
+  border-right: 2px solid #232b38;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.9),
+    0 0 40px rgba(0, 0, 0, 0.85);
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px 14px 14px 14px;
+}
+
+/* Subtle industrial grip texture on side borders */
+.controller-enclosure::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 4px; height: 100%;
+  background: repeating-linear-gradient(180deg, #222b38 0px, #222b38 4px, #0e1218 4px, #0e1218 8px);
+  opacity: 0.7;
+  pointer-events: none;
+}
+.controller-enclosure::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; width: 4px; height: 100%;
+  background: repeating-linear-gradient(180deg, #222b38 0px, #222b38 4px, #0e1218 4px, #0e1218 8px);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Decorative Machined Hex Screws */
+.screw {
+  width: 9px;
+  height: 9px;
+  background: radial-gradient(circle, #475569 25%, #1e293b 80%, #0f172a 100%);
+  border-radius: 50%;
+  position: absolute;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3), 0 1px 1px rgba(0, 0, 0, 0.8);
+}
+.screw::after {
+  content: '';
+  position: absolute;
+  top: 4px; left: 2px; width: 5px; height: 1px;
+  background: #0f172a;
+}
+.screw.tl { top: 8px; left: 8px; }
+.screw.tr { top: 8px; right: 8px; }
+.screw.bl { bottom: 8px; left: 8px; }
+.screw.br { bottom: 8px; right: 8px; }
+
+/* =========================================================
+   TOP STATUS / PROFILE BAR
+   ========================================================= */
+.controller-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #090c12;
+  border: 1px solid #1f2735;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8), 0 1px 0 rgba(255, 255, 255, 0.05);
+  position: relative;
+}
+
+.profile-pod {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Circular Avatar with First Two Letters */
+.avatar-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #3b82f6 0%, #1d4ed8 60%, #172554 100%);
+  border: 2px solid #60a5fa;
+  box-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.7),
+    inset 0 1px 2px rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 1.05rem;
+  letter-spacing: 1px;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge-master {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #000;
+  font-size: 0.65rem;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+}
+
+.profile-sub {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+
+/* Controller Header Center: Compact Mode Pill */
+.controller-center-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.controller-mode-pill {
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+  transition: all 0.25s ease;
+}
+
+.controller-mode-pill.mode-drive {
+  background: rgba(14, 165, 233, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+}
+
+.controller-mode-pill.mode-photo {
+  background: rgba(225, 29, 72, 0.2);
+  border-color: rgba(251, 113, 133, 0.5);
+  color: #fb7185;
+  box-shadow: 0 0 12px rgba(225, 29, 72, 0.35);
+}
+
+.controller-mode-pill.mode-sample {
+  background: rgba(2, 132, 199, 0.2);
+  border-color: rgba(56, 189, 248, 0.5);
+  color: #7dd3fc;
+  box-shadow: 0 0 12px rgba(2, 132, 199, 0.35);
+}
+
+/* Controller Right Pod: Telemetry + Pause Button */
+.controller-right-pod {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.telemetry-pod {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #4ade80;
+}
+
+.led-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--led-green);
+  box-shadow: 0 0 8px var(--led-green-glow);
+  animation: pulse-led 2s infinite ease-in-out;
+}
+
+@keyframes pulse-led {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.9); }
+}
+
+.room-tag {
+  font-size: 0.68rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* Hardware Tactile Pause Button on Controller */
+.controller-pause-btn {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 
+    0 4px 10px rgba(0, 0, 0, 0.6),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.controller-pause-btn .ctrl-pause-icon {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #f8fafc;
+  line-height: 1;
+}
+
+.controller-pause-btn:active,
+.controller-pause-btn.is-paused {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-color: #fbbf24;
+  color: #000;
+  box-shadow: 
+    0 0 14px rgba(245, 158, 11, 0.5),
+    inset 0 1px 2px rgba(255, 255, 255, 0.4);
+  transform: translateY(1px);
+}
+
+.controller-pause-btn.is-paused .ctrl-pause-icon {
+  color: #000;
+}
+
+/* Controller Pause Card Overlay */
+.controller-pause-card {
+  width: 90%;
+  max-width: 360px;
+  background: radial-gradient(circle at 50% 0%, #1e293b 0%, #090d14 100%);
+  border: 2px solid #38bdf8;
+  border-radius: 16px;
+  padding: 28px 20px;
+  text-align: center;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 24px rgba(56, 189, 248, 0.25);
+}
+
+.ctrl-pause-badge {
+  display: inline-flex;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.15);
+  border: 2px solid #38bdf8;
+  color: #38bdf8;
+  font-size: 1.8rem;
+  font-weight: 900;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+}
+
+.ctrl-pause-title {
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #f8fafc;
+  margin-bottom: 6px;
+}
+
+.ctrl-pause-sub {
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  color: #94a3b8;
+}
+
+/* =========================================================
+   HARDWARE CONTROLS MAIN SECTION
+   ========================================================= */
+.controls-deck {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  background: 
+    radial-gradient(circle at 25% 45%, #181e29 0%, transparent 60%),
+    radial-gradient(circle at 75% 45%, #181e29 0%, transparent 60%),
+    #0c0f16;
+  border: 1px solid #1b2230;
+  border-radius: 12px;
+  padding: 18px 12px;
+  box-shadow: 
+    inset 0 2px 6px rgba(0, 0, 0, 0.8),
+    0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.gamepad-split {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin: auto 0;
+  padding: 8px 4px;
+}
+
+/* =========================================================
+   PHYSICAL D-PAD (LEFT SIDE)
+   Beveled recessed well, molded cross with directional arrows
+   ========================================================= */
+.dpad-well {
+  width: 164px;
+  height: 164px;
+  background: radial-gradient(circle, #080b0f 50%, #151b24 100%);
+  border-radius: 50%;
+  border: 2px solid #252e3d;
+  box-shadow: 
+    inset 0 4px 10px rgba(0, 0, 0, 0.95),
+    inset 0 1px 2px rgba(255, 255, 255, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  touch-action: none;
+}
+
+.dpad-cross {
+  position: relative;
+  width: 140px;
+  height: 140px;
+}
+
+/* Center pivot disk */
+.dpad-center {
+  position: absolute;
+  top: 50px;
+  left: 50px;
+  width: 40px;
+  height: 40px;
+  background: radial-gradient(circle, #151922 40%, #0d1017 100%);
+  border-radius: 50%;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+}
+
+/* Physical D-Pad Directional Buttons */
+.dpad-btn {
+  position: absolute;
+  background: linear-gradient(180deg, var(--dpad-highlight) 0%, var(--dpad-surface) 35%, var(--dpad-surface-dark) 100%);
+  border: 1px solid #3b4657;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.8),
+    inset 0 1px 1px rgba(255, 255, 255, 0.25),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.7);
+  cursor: pointer;
+  transition: transform 0.06s ease, box-shadow 0.06s ease, background 0.06s ease;
+  outline: none;
+}
+
+.dpad-btn::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+/* Up Button */
+.dpad-btn.up {
+  top: 4px;
+  left: 48px;
+  width: 44px;
+  height: 48px;
+  border-radius: 8px 8px 4px 4px;
+}
+.dpad-btn.up::after {
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 9px solid #cbd5e1;
+}
+
+/* Down Button */
+.dpad-btn.down {
+  bottom: 4px;
+  left: 48px;
+  width: 44px;
+  height: 48px;
+  border-radius: 4px 4px 8px 8px;
+}
+.dpad-btn.down::after {
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 9px solid #cbd5e1;
+}
+
+/* Left Button */
+.dpad-btn.left {
+  top: 48px;
+  left: 4px;
+  width: 48px;
+  height: 44px;
+  border-radius: 8px 4px 4px 8px;
+}
+.dpad-btn.left::after {
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-right: 9px solid #cbd5e1;
+}
+
+/* Right Button */
+.dpad-btn.right {
+  top: 48px;
+  right: 4px;
+  width: 48px;
+  height: 44px;
+  border-radius: 4px 8px 8px 4px;
+}
+.dpad-btn.right::after {
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-left: 9px solid #cbd5e1;
+}
+
+/* Pressed Depth Animation for D-Pad */
+.dpad-btn:active, .dpad-btn.pressed {
+  transform: translateY(2px) scale(0.96);
+  background: linear-gradient(180deg, var(--dpad-surface-dark) 0%, #0d1017 100%);
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    inset 0 2px 4px rgba(0, 0, 0, 0.9);
+  color: #38bdf8;
+}
+.dpad-btn:active::after, .dpad-btn.pressed::after {
+  filter: drop-shadow(0 0 4px #38bdf8);
+}
+
+/* =========================================================
+   PHYSICAL ACTION BUTTONS A, B, C (RIGHT SIDE)
+   Layered: Recessed Ring -> Beveled Rim -> Button Cap
+   ========================================================= */
+.action-cluster {
+  width: 146px;
+  height: 180px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Button Mounting Well */
+.button-well {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #080a0f 60%, #1c222e 100%);
+  border: 2px solid #202735;
+  box-shadow: 
+    inset 0 3px 6px rgba(0, 0, 0, 0.9),
+    0 1px 2px rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  touch-action: none;
+}
+
+/* Ergonomic arrangement: A top-right, B middle-left, C bottom-center */
+.button-well.btn-pos-a { top: 4px; right: 12px; }
+.button-well.btn-pos-b { top: 58px; left: 10px; }
+.button-well.btn-pos-c { bottom: 4px; right: 28px; }
+
+/* Physical Hardware Button Cap */
+.action-cap {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  font-weight: 900;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.06s ease, box-shadow 0.06s ease, filter 0.06s ease;
+  outline: none;
+  border: none;
+}
+
+.action-label-letter {
+  font-size: 1.15rem;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.action-sub-label {
+  font-size: 0.55rem;
+  letter-spacing: 0.5px;
+  font-family: 'Share Tech Mono', monospace;
+  font-weight: 700;
+  margin-top: 1px;
+  opacity: 0.9;
+  text-transform: uppercase;
+}
+
+/* BUTTON A: RED MOLDED POLYMER (PHOTO) */
+.btn-a .action-cap {
+  background: 
+    radial-gradient(circle at 35% 30%, var(--btn-a-red-light) 0%, var(--btn-a-red) 55%, var(--btn-a-red-dark) 100%);
+  color: #fff;
+  border-top: 1.5px solid #fda4af;
+  border-bottom: 2px solid #4c0519;
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.8),
+    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 -3px 4px rgba(0, 0, 0, 0.4) inset;
+}
+.btn-a .action-cap:active, .btn-a .action-cap.pressed {
+  transform: translateY(3px) scale(0.95);
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    inset 0 3px 5px rgba(0, 0, 0, 0.7);
+  filter: brightness(1.2) drop-shadow(0 0 8px rgba(225, 29, 72, 0.8));
+}
+
+/* BUTTON B: BLUE MOLDED POLYMER (SAMPLE) */
+.btn-b .action-cap {
+  background: 
+    radial-gradient(circle at 35% 30%, var(--btn-b-blue-light) 0%, var(--btn-b-blue) 55%, var(--btn-b-blue-dark) 100%);
+  color: #fff;
+  border-top: 1.5px solid #7dd3fc;
+  border-bottom: 2px solid #082f49;
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.8),
+    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 -3px 4px rgba(0, 0, 0, 0.4) inset;
+}
+.btn-b .action-cap:active, .btn-b .action-cap.pressed {
+  transform: translateY(3px) scale(0.95);
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    inset 0 3px 5px rgba(0, 0, 0, 0.7);
+  filter: brightness(1.2) drop-shadow(0 0 8px rgba(2, 132, 199, 0.8));
+}
+
+/* BUTTON C: GREEN MOLDED POLYMER (ACTION / CONFIRM) */
+.btn-c .action-cap {
+  background: 
+    radial-gradient(circle at 35% 30%, var(--btn-c-green-light) 0%, var(--btn-c-green) 55%, var(--btn-c-green-dark) 100%);
+  color: #fff;
+  border-top: 1.5px solid #6ee7b7;
+  border-bottom: 2px solid #022c22;
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.8),
+    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 -3px 4px rgba(0, 0, 0, 0.4) inset;
+}
+.btn-c .action-cap:active, .btn-c .action-cap.pressed {
+  transform: translateY(3px) scale(0.95);
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    inset 0 3px 5px rgba(0, 0, 0, 0.7);
+  filter: brightness(1.2) drop-shadow(0 0 10px rgba(5, 150, 105, 0.9));
+}
+
+/* Active mode highlights on buttons */
+.btn-active-glow .action-cap {
+  animation: button-pulse-glow 1.2s infinite alternate ease-in-out;
+}
+@keyframes button-pulse-glow {
+  from { filter: brightness(1); }
+  to { filter: brightness(1.3) drop-shadow(0 0 12px currentColor); }
+}
+
+/* =========================================================
+   BOTTOM MASTER NAVIGATION DOCK
+   Only visible / enabled for Master Player
+   ========================================================= */
+.master-nav-dock {
+  background: #080b10;
+  border: 1px solid #1a2230;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-top: 10px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.master-dock-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #f59e0b;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.master-btn-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.master-hardware-btn {
+  background: linear-gradient(180deg, #273142 0%, #161c26 100%);
+  border: 1px solid #37445a;
+  border-radius: 4px;
+  color: #cbd5e1;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 8px 2px;
+  text-align: center;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.08s ease;
+}
+
+.master-hardware-btn:active {
+  transform: translateY(1.5px);
+  background: #0f141c;
+  color: #f59e0b;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+/* Disabled non-master view */
+.master-nav-dock.locked,
+.master-nav-dock.hidden {
+  display: none !important;
+}
+
+/* =========================================================
+   REGISTRATION / USERNAME OVERLAY SCREEN
+   Matching futuristic spacecraft style
+   ========================================================= */
+.controller-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 6, 10, 0.92);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.controller-modal-overlay.hidden {
+  display: none !important;
+}
+
+.auth-panel {
+  width: 100%;
+  max-width: 380px;
+  background: 
+    radial-gradient(circle at 50% 0%, #1c2636 0%, #0d121a 100%);
+  border: 2px solid #2d3b4e;
+  border-radius: 12px;
+  padding: 24px 20px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  text-align: center;
+}
+
+.auth-title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #f8fafc;
+  margin-bottom: 4px;
+}
+
+.auth-subtitle {
+  font-size: 0.75rem;
+  color: #38bdf8;
+  letter-spacing: 1.5px;
+  margin-bottom: 20px;
+}
+
+.auth-field-group {
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.auth-label {
+  display: block;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.auth-input {
+  width: 100%;
+  background: #06090e;
+  border: 1px solid #283548;
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 1.1rem;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.auth-input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.auth-btn-join {
+  width: 100%;
+  background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%);
+  border: 1px solid #38bdf8;
+  border-radius: 6px;
+  padding: 14px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 2px;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 
+    0 4px 12px rgba(2, 132, 199, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: transform 0.08s ease, filter 0.08s ease;
+  margin-top: 10px;
+}
+
+.auth-btn-join:active {
+  transform: translateY(2px);
+  filter: brightness(0.9);
+}
+
+.auth-status-msg {
+  font-size: 0.75rem;
+  color: #ef4444;
+  margin-top: 12px;
+  min-height: 18px;
+}
+
+/* =========================================================
+   WIN / LOSE OVERLAY ON CONTROLLER
+   ========================================================= */
+.controller-result-modal {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(6px);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+
+.result-card {
+  background: #090c12;
+  border: 2px solid #22c55e;
+  border-radius: 12px;
+  padding: 28px 24px;
+  box-shadow: 0 0 30px rgba(34, 197, 94, 0.4);
+  max-width: 320px;
+  width: 100%;
+}
+
+.result-card.lose {
+  border-color: #ef4444;
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.4);
+}
+
+.result-title {
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.result-title.win { color: #22c55e; }
+.result-title.lose { color: #ef4444; }
+
+.result-trophy {
+  font-size: 3rem;
+  margin: 10px 0;
+}
+
+.result-score {
+  font-size: 1.2rem;
+  color: #f8fafc;
+  margin-bottom: 18px;
+}

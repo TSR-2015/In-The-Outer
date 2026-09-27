@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Solar Sentinel - Heliophysics Command</title>
+    <title>IN THE OUTER</title>
     
     <!-- Google Fonts: Inter for minimalist sans-serif typography, Share Tech Mono for telemetry -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   </head>
   <body>
     <!-- Three.js Canvas Container -->
@@ -20,10 +20,15 @@
       <span id="audio-text">SOUND: ON</span>
     </button>
 
+    <!-- Top Room Status Badge -->
+    <div id="top-room-badge" class="top-room-badge font-mono hidden">
+      ROOM: ---- | PLAYERS: 0
+    </div>
+
     <!-- LOADING SCREEN -->
     <section id="loading-screen" class="ui-screen active">
       <div class="loading-container">
-        <h1 class="minimal-title">SOLAR SENTINEL</h1>
+        <h1 class="minimal-title">IN THE OUTER</h1>
         <p class="minimal-subtitle">SYSTEM BOOT SEQUENCE</p>
         <div class="progress-bar-container">
           <div id="loading-progress-bar" class="progress-bar" style="width: 0%"></div>
@@ -35,20 +40,146 @@
       </div>
     </section>
 
-    <!-- MAIN MENU -->
-    <section id="main-menu" class="ui-screen">
-      <div class="menu-content">
-        <h1 class="logo-text">SOLAR SENTINEL</h1>
-        <p class="tagline">HELIOPHYSICAL RESEARCH SIMULATOR</p>
+    <!-- LANDING PAGE (MODE SELECTION: SINGLE PLAYER / MULTIPLAYER) -->
+    <section id="landing-page" class="ui-screen font-mono">
+      <!-- Cosmic Parallax Background Layers -->
+      <div class="landing-parallax-universe" id="landing-parallax-universe">
+        <div class="parallax-layer layer-deep-stars" data-speed="0.02"></div>
+        <div class="parallax-layer layer-mid-stars" data-speed="0.05"></div>
+        <div class="parallax-layer layer-nebula" data-speed="0.08"></div>
+        <div class="parallax-layer layer-cosmic-dust" data-speed="0.12"></div>
+      </div>
+
+      <div class="landing-content text-center">
+        <!-- System Status Pill -->
+        <div class="landing-status-badge">
+          <span class="status-pulse-dot"></span>
+          <span>AEROSPACE SIMULATION READY // FLIGHT DECK ACTIVE</span>
+        </div>
+
+        <h1 class="landing-title font-mono">IN THE OUTER</h1>
+        <p class="landing-tagline">EXPLORE &bull; DISCOVER &bull; LEARN</p>
         
-        <div class="menu-buttons">
-          <button id="btn-start" class="menu-btn primary-btn">START SIMULATION</button>
-          <button id="btn-howto" class="menu-btn">USER MANUAL</button>
-          <button id="btn-credits" class="menu-btn">CREDITS</button>
+        <div class="landing-mode-grid">
+          <button id="btn-mode-single" class="mode-select-btn glass-card single-player-card">
+            <div class="mode-glow-accent"></div>
+            <div class="mode-icon-well">
+              <span class="mode-icon-svg">
+                <svg class="ui-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+                  <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+                  <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
+                  <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+                </svg>
+              </span>
+            </div>
+            <div class="mode-meta">
+              <span class="mode-tag">CAMPAIGN MODE</span>
+              <div class="mode-title">SINGLE PLAYER</div>
+              <div class="mode-desc">Campaign Missions 01–06 & Solo Deep Space Exploration</div>
+              <div class="mode-action-link">
+                <span>LAUNCH MISSION</span>
+                <span class="mode-arrow">
+                  <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </span>
+              </div>
+            </div>
+          </button>
+          
+          <button id="btn-mode-multi" class="mode-select-btn glass-card multiplayer-card">
+            <div class="mode-glow-accent"></div>
+            <div class="mode-icon-well">
+              <span class="mode-icon-svg">
+                <svg class="ui-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="6" x2="10" y1="12" y2="12"/>
+                  <line x1="8" x2="8" y1="10" y2="14"/>
+                  <line x1="15" x2="15.01" y1="13" y2="13"/>
+                  <line x1="18" x2="18.01" y1="11" y2="11"/>
+                  <rect width="20" height="12" x="2" y="6" rx="6"/>
+                </svg>
+              </span>
+            </div>
+            <div class="mode-meta">
+              <span class="mode-tag">AIRCONSOLE PROTOCOL</span>
+              <div class="mode-title">MULTIPLAYER</div>
+              <div class="mode-desc">Live Mars Rover Race with Wireless Phone Controllers</div>
+              <div class="mode-action-link">
+                <span>OPEN LOBBY</span>
+                <span class="mode-arrow">
+                  <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </span>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <div class="landing-footer-actions">
+          <button id="btn-howto" class="game-btn btn-secondary btn-sm">USER MANUAL</button>
+          <button id="btn-credits" class="game-btn btn-secondary btn-sm">CREDITS</button>
         </div>
       </div>
+
       <div class="menu-footer">
-        <span>NASA RESEARCH DATA INTEGRATION</span>
+        <span>AEROSPACE RESEARCH &bull; PLANETARY ROVER TELEMETRY &bull; DEEP SPACE ORBIT</span>
+      </div>
+    </section>
+
+    <!-- AIRCONSOLE MULTIPLAYER LOBBY SCREEN -->
+    <section id="lobby-screen" class="ui-screen font-mono">
+      <div class="lobby-panel minimal-panel">
+        <div class="lobby-header text-center">
+          <div class="lobby-proto-tag">AIRCONSOLE MULTIPLAYER LINK</div>
+          <h1 class="lobby-title">JOIN GAME</h1>
+          <p class="lobby-subtitle">IN THE OUTER // PLANETARY ROVER RACE</p>
+        </div>
+
+        <div class="lobby-code-box text-center">
+          <div class="lobby-code-label">ROOM CODE</div>
+          <div id="lobby-room-code" class="lobby-room-code">----</div>
+          
+          <!-- Dynamic Neumorphic QR Code Chassis with Scanner Animation -->
+          <div class="lobby-qr-container">
+            <div class="lobby-qr-neumorphic-plate">
+              <div class="lobby-qr-inset-well">
+                <!-- Laser Scanning Beam -->
+                <div class="qr-laser-line"></div>
+                <!-- Optical Reticle Corners -->
+                <div class="qr-reticle corner-tl"></div>
+                <div class="qr-reticle corner-tr"></div>
+                <div class="qr-reticle corner-bl"></div>
+                <div class="qr-reticle corner-br"></div>
+                <!-- Dynamic QR Canvas -->
+                <canvas id="lobby-qr-canvas" width="180" height="180"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="lobby-instructions">
+            Scan the QR code with your phone camera<br>
+            or navigate to controller URL:<br>
+            <a id="lobby-join-url" class="lobby-url-link" href="#" target="_blank">http://localhost:3000/controller</a>
+          </div>
+        </div>
+
+        <!-- Live Player Roster -->
+        <div class="lobby-waiting-box text-center">
+          <div id="lobby-waiting-status" class="lobby-waiting-text">WAITING FOR PLAYERS...</div>
+        </div>
+
+        <div id="lobby-players-list" class="lobby-players-grid">
+          <!-- Populated dynamically via MultiplayerManager -->
+        </div>
+
+        <div class="lobby-actions" style="display: flex; gap: 16px; justify-content: center; margin-top: 24px;">
+          <button id="btn-lobby-back" class="game-btn btn-secondary btn-lg">
+            <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+            RETURN TO TITLE
+          </button>
+          <button id="btn-lobby-start" class="game-btn btn-primary btn-lg">
+            <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+            START MARS ROVER
+          </button>
+        </div>
       </div>
     </section>
 
@@ -160,7 +291,7 @@
         <!-- Center Section: HUD overlays & Primary Capture Buttons -->
         <main class="dashboard-center">
           <header class="dashboard-header minimal-panel">
-            <div class="header-logo">SOLAR SENTINEL // CTRL</div>
+            <div class="header-logo">IN THE OUTER // CTRL</div>
             <div class="header-stats">
               <div class="mission-timer-box">
                 <span>TIME:</span>
@@ -256,10 +387,14 @@
     </section>
 
     <!-- MISSION COMPLETE SCREEN (MINIMALIST RECOVERY PANEL) -->
-    <section id="mission-complete-screen" class="ui-screen">
-      <div class="menu-content">
-        <h1 class="logo-text">DATA TELEMETRY SECURED</h1>
-        <p class="tagline">STELLAR EXPEDITION SUCCESSFULLY CONCLUDED</p>
+    <section id="mission-complete-screen" class="ui-screen font-mono">
+      <div class="menu-content" style="max-width: 540px; padding: 40px;">
+        <div class="mission-outcome-header" style="display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.8rem; color: #22c55e; margin-bottom: 8px; font-weight: 900;">
+          <svg class="ui-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+          <span>MISSION SUCCESSFUL</span>
+        </div>
+        <h1 class="logo-text" style="font-size: 1.6rem; margin-bottom: 4px;">DATA TELEMETRY SECURED</h1>
+        <p class="tagline" style="margin-bottom: 25px;">STELLAR EXPEDITION SUCCESSFULLY CONCLUDED</p>
         
         <div class="complete-stats font-mono">
           <div class="stat-box">
@@ -277,8 +412,8 @@
         </div>
 
         <div class="complete-buttons" style="display: flex; gap: 15px; width: 100%; margin-top: 30px;">
-          <button id="btn-complete-missions" class="menu-btn primary-btn" style="flex: 1;">CONTINUE TO MISSIONS TAB</button>
-          <button id="btn-complete-restart" class="menu-btn" style="flex: 1;">RESTART MISSION</button>
+          <button id="btn-complete-restart" class="game-btn btn-secondary btn-lg" style="flex: 1;">RESTART MISSION</button>
+          <button id="btn-complete-missions" class="game-btn btn-primary btn-lg" style="flex: 1.5;">CONTINUE TO MISSIONS TAB</button>
         </div>
       </div>
     </section>
@@ -324,7 +459,7 @@
       <div class="modal-content minimal-panel">
         <h2 class="panel-header">CREDITS</h2>
         <div class="modal-body text-center">
-          <p><strong>SOLAR SENTINEL REDESIGN</strong></p>
+          <p><strong>IN THE OUTER REDESIGN</strong></p>
           <p>A minimalist black-and-white heliophysics command simulation.</p>
           <p>Built using Three.js, GSAP path animations, and Web Audio synthesizers.</p>
         </div>
@@ -389,82 +524,167 @@
       </div>
     </div>
     
-    <!-- MARS ROVER HUD OVERLAY (MISSION 3) -->
+    <!-- MARS ROVER HUD OVERLAY (MISSION 3 - SUPPORTS 1-PLAYER & 2-PLAYER SPLIT-SCREEN) -->
     <div id="mars-hud" class="hud-overlay hidden font-mono">
-      <!-- Top Left: Mission Title -->
-      <div class="hud-panel left-panel minimal-panel" style="top: 25px; width: 340px;">
-        <div class="panel-header">MISSION 03 // MARS CLIMATE EXPLORER</div>
-        <div class="telemetry-item">
-          <span class="label">CURRENT REGION:</span>
-          <span id="mars-hud-region" class="value highlight">ROCKY PLAIN</span>
+      <!-- Mars Pause Button (Centered in split-screen, or inline right in single-player) -->
+      <button id="btn-mars-pause" class="mars-pause-btn font-mono" title="Pause Game (ESC / P)">
+        <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+          <rect x="6" y="4" width="4" height="16" rx="1"/>
+          <rect x="14" y="4" width="4" height="16" rx="1"/>
+        </svg>
+        <span class="pause-text">PAUSE</span>
+      </button>
+
+      <!-- Camera Flash Effect -->
+      <div id="mars-camera-flash" class="camera-flash-overlay"></div>
+
+      <!-- Split-Screen Central Divider -->
+      <div id="mars-split-divider" class="split-screen-divider hidden"></div>
+
+      <!-- =========================================
+           VIEWPORT 1 (PLAYER 1 - LEFT VIEWPORT)
+           ========================================= -->
+      <div id="mars-hud-p1" class="mars-viewport-hud p1-hud">
+        <!-- Unified Top Command Header Bar (Non-overlapping single-row command center) -->
+        <header class="mars-top-command-bar">
+          <!-- Left: Identity Pod -->
+          <div class="mars-identity-pod">
+            <div id="p1-avatar" class="p-hud-avatar">P1</div>
+            <div class="mars-identity-meta">
+              <div id="p1-name" class="p-hud-name">PLAYER 1</div>
+              <div class="p-hud-rover-tag">ROVER 01 // EXPLORER</div>
+            </div>
+          </div>
+
+          <!-- Center: Telemetry Chips Strip -->
+          <div class="mars-telemetry-chips">
+            <div class="mars-telem-chip">
+              <span class="chip-label">REGION</span>
+              <strong id="mars-hud-region-p1" class="chip-val region-p1">ROCKY PLAIN</strong>
+            </div>
+            <div class="mars-telem-chip">
+              <span class="chip-label">BATTERY</span>
+              <strong id="mars-hud-battery-p1" class="chip-val battery-val">100%</strong>
+            </div>
+            <div class="mars-telem-chip">
+              <span class="chip-label">SPEED</span>
+              <strong id="mars-hud-speed-p1" class="chip-val">0.0 m/s</strong>
+            </div>
+            <div class="mars-telem-chip">
+              <span class="chip-label">TEMP</span>
+              <strong id="mars-hud-temp-p1" class="chip-val">-63°C</strong>
+            </div>
+          </div>
+
+          <!-- Right: Score & Rank Pod -->
+          <div class="mars-score-pod">
+            <div class="mars-score-meta">
+              <span class="chip-label">SCORE</span>
+              <span class="p-hud-score-val"><strong id="p1-score">0</strong> <small>PTS</small></span>
+            </div>
+            <div id="p1-rank" class="p-hud-rank-badge rank-1st">1ST PLACE</div>
+          </div>
+        </header>
+
+        <!-- Minimap Radar (Left Bottom) -->
+        <div class="hud-panel p-minimap-panel">
+          <div class="minimap-title">SURFACE SCAN // ROVER 1</div>
+          <canvas id="mars-minimap-canvas-p1" width="140" height="140"></canvas>
         </div>
-        <div class="telemetry-item">
-          <span class="label">ROVER BATTERY:</span>
-          <span id="mars-hud-battery" class="value">100%</span>
+
+        <!-- Primary Objective Card (Bottom Center / Left) -->
+        <div class="hud-panel p-objective-card">
+          <div class="objective-header">MISSION OBJECTIVE:</div>
+          <div id="mars-hud-objective-p1" class="objective-body">Explore Martian terrain & collect climate samples</div>
+          <div class="progress-bar-container" style="height: 6px; margin-top: 6px;">
+            <div id="mars-hud-progress-fill-p1" class="progress-bar" style="width: 0%; height: 100%;"></div>
+          </div>
         </div>
-        <div class="stat-progress-bar">
-          <div id="mars-hud-battery-fill" class="progress-bar-fill" style="width: 100%"></div>
-        </div>
-        <div class="telemetry-item" style="margin-top: 8px;">
-          <span class="label">VELOCITY:</span>
-          <span id="mars-hud-speed" class="value">0.0 m/s</span>
+
+        <!-- Mode Indicator Badge -->
+        <div id="p1-mode-badge" class="p-mode-badge hidden">PHOTO MODE ACTIVE</div>
+
+        <!-- Viewport 1 Outcome (YOU WIN / YOU LOSE) -->
+        <div id="p1-outcome-overlay" class="viewport-outcome-overlay hidden">
+          <div class="outcome-box">
+            <div id="p1-outcome-title" class="outcome-title win">MISSION COMPLETE</div>
+            <div id="p1-outcome-sub" class="outcome-sub">YOU WIN!</div>
+            <div class="outcome-score">FINAL SCORE: <strong id="p1-outcome-score-val">0</strong> PTS</div>
+          </div>
         </div>
       </div>
 
-      <!-- Top Right: Environmental & Climate Readouts -->
-      <div class="hud-panel panel-right minimal-panel" style="top: 25px; right: 20px; width: 300px;">
-        <div class="panel-header">MARS CLIMATE TELEMETRY</div>
-        <div class="telemetry-item">
-          <span class="label">SURFACE TEMP:</span>
-          <span id="mars-hud-temp" class="value highlight">-63°C</span>
-        </div>
-        <div class="telemetry-item">
-          <span class="label">WIND VELOCITY:</span>
-          <span id="mars-hud-wind" class="value">18 km/h</span>
-        </div>
-        <div class="telemetry-item">
-          <span class="label">DUST INTENSITY:</span>
-          <span id="mars-hud-dust" class="value">MODERATE</span>
-        </div>
-        <div class="telemetry-item">
-          <span class="label">SURFACE RAD:</span>
-          <span id="mars-hud-rad" class="value">0.42 mSv/h</span>
+      <!-- =========================================
+           VIEWPORT 2 (PLAYER 2 - RIGHT VIEWPORT)
+           ========================================= -->
+      <div id="mars-hud-p2" class="mars-viewport-hud p2-hud hidden">
+        <!-- Unified Top Command Header Bar -->
+        <header class="mars-top-command-bar">
+          <!-- Left: Identity Pod -->
+          <div class="mars-identity-pod">
+            <div id="p2-avatar" class="p-hud-avatar p2-color">P2</div>
+            <div class="mars-identity-meta">
+              <div id="p2-name" class="p-hud-name">PLAYER 2</div>
+              <div class="p-hud-rover-tag">ROVER 02 // VANGUARD</div>
+            </div>
+          </div>
+
+          <!-- Center: Telemetry Chips Strip -->
+          <div class="mars-telemetry-chips">
+            <div class="mars-telem-chip">
+              <span class="chip-label">REGION</span>
+              <strong id="mars-hud-region-p2" class="chip-val region-p2">ROCKY PLAIN</strong>
+            </div>
+            <div class="mars-telem-chip">
+              <span class="chip-label">BATTERY</span>
+              <strong id="mars-hud-battery-p2" class="chip-val battery-val">100%</strong>
+            </div>
+            <div class="mars-telem-chip">
+              <span class="chip-label">SPEED</span>
+              <strong id="mars-hud-speed-p2" class="chip-val">0.0 m/s</strong>
+            </div>
+            <div class="mars-telem-chip">
+              <span class="chip-label">TEMP</span>
+              <strong id="mars-hud-temp-p2" class="chip-val">-63°C</strong>
+            </div>
+          </div>
+
+          <!-- Right: Score & Rank Pod -->
+          <div class="mars-score-pod">
+            <div class="mars-score-meta">
+              <span class="chip-label">SCORE</span>
+              <span class="p-hud-score-val"><strong id="p2-score">0</strong> <small>PTS</small></span>
+            </div>
+            <div id="p2-rank" class="p-hud-rank-badge rank-2nd">2ND PLACE</div>
+          </div>
+        </header>
+
+        <!-- Minimap Radar (Right Bottom) -->
+        <div class="hud-panel p-minimap-panel">
+          <div class="minimap-title">SURFACE SCAN // ROVER 2</div>
+          <canvas id="mars-minimap-canvas-p2" width="140" height="140"></canvas>
         </div>
 
-        <!-- Minimap Canvas Container -->
-        <div class="minimap-container" style="margin-top: 10px; text-align: center; border: var(--border-thin); background: #000; padding: 5px;">
-          <div style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 4px;">EXPLORATION MINIMAP</div>
-          <canvas id="mars-minimap-canvas" width="160" height="160" style="display: inline-block;"></canvas>
+        <!-- Primary Objective Card -->
+        <div class="hud-panel p-objective-card">
+          <div class="objective-header">MISSION OBJECTIVE:</div>
+          <div id="mars-hud-objective-p2" class="objective-body">Explore Martian terrain & collect climate samples</div>
+          <div class="progress-bar-container" style="height: 6px; margin-top: 6px;">
+            <div id="mars-hud-progress-fill-p2" class="progress-bar" style="width: 0%; height: 100%;"></div>
+          </div>
         </div>
-      </div>
 
-      <!-- Bottom Center: Objective Display & Survey Progress -->
-      <div class="hud-panel center-panel minimal-panel" style="bottom: 20px; width: 480px;">
-        <div class="objective-display text-center">
-          <span class="label">PRIMARY MISSION OBJECTIVE:</span>
-          <div id="mars-hud-objective" class="value highlight">Explore Martian terrain & collect climate samples</div>
-        </div>
-        <div class="progress-bar-container" style="height: 10px; margin-top: 8px;">
-          <div id="mars-hud-progress-fill" class="progress-bar" style="width: 0%; height: 100%;"></div>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.75rem;">
-          <span>PHOTOS: <strong id="mars-stat-photos">0/3</strong></span>
-          <span>SAMPLES: <strong id="mars-stat-samples">0/3</strong></span>
-          <span>SCANS: <strong id="mars-stat-scans">1/3</strong></span>
-          <span>REGIONS: <strong id="mars-stat-regions">1/4</strong></span>
-        </div>
-      </div>
+        <!-- Mode Indicator Badge -->
+        <div id="p2-mode-badge" class="p-mode-badge hidden">PHOTO MODE ACTIVE</div>
 
-      <!-- Bottom Right: Keyboard Controls Helper Panel -->
-      <div class="hud-panel" style="bottom: 20px; left: 20px; width: 260px; background: rgba(255,255,255,0.92); border: var(--border-thin); padding: 12px; font-size: 0.75rem; line-height: 1.5;">
-        <div style="font-weight: 800; border-bottom: 1px solid #000; margin-bottom: 6px; padding-bottom: 2px;">ROVER CONTROLS</div>
-        <div>[W/S] Drive Forward / Reverse</div>
-        <div>[A/D] Steer Left / Right</div>
-        <div>[SHIFT] Rocket Boost</div>
-        <div>[SPACE] Emergency Brake</div>
-        <div>[P] Capture Scientific Photo</div>
-        <div>[E] Collect Soil/Sand Sample</div>
-        <div>[M] Toggle Climate Data Log</div>
+        <!-- Viewport 2 Outcome (YOU WIN / YOU LOSE) -->
+        <div id="p2-outcome-overlay" class="viewport-outcome-overlay hidden">
+          <div class="outcome-box">
+            <div id="p2-outcome-title" class="outcome-title win">MISSION COMPLETE</div>
+            <div id="p2-outcome-sub" class="outcome-sub">YOU WIN!</div>
+            <div class="outcome-score">FINAL SCORE: <strong id="p2-outcome-score-val">0</strong> PTS</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -481,19 +701,47 @@
       </div>
     </div>
 
+    <!-- MARS PAUSE MODAL -->
+    <div id="mars-pause-modal" class="modal">
+      <div class="modal-content minimal-panel text-center" style="max-width: 440px;">
+        <h2 class="panel-header" style="letter-spacing: 2px;">GAME PAUSED</h2>
+        <div class="modal-body font-mono" style="padding: 24px 0; color: #cbd5e1; font-size: 0.95rem;">
+          MISSION SIMULATION IS TEMPORARILY SUSPENDED
+        </div>
+        <div class="modal-actions" style="display: flex; gap: 15px; justify-content: center;">
+          <button id="btn-mars-resume" class="brief-btn start" style="flex: 1; padding: 12px;">RESUME</button>
+          <button id="btn-mars-exit" class="brief-btn back" style="flex: 1; padding: 12px;">EXIT GAME</button>
+        </div>
+      </div>
+    </div>
+
     <!-- MARS ROVER CAMERA VIEWFINDER OVERLAY (P key) -->
     <div id="mars-camera-viewfinder" class="hud-overlay hidden font-mono" style="pointer-events: none; z-index: 120; border: 12px solid rgba(0,0,0,0.85); background: transparent;">
       <div style="position: absolute; top: 25px; left: 25px; color: #22c55e; font-size: 0.85rem; background: rgba(0,0,0,0.7); padding: 8px 14px; border: 1px solid #22c55e;">
-        <div>REC ● MARS CAM [SOL 142]</div>
-        <div>BATTERY: <span id="viewfinder-battery">94%</span> | TEMP: <span id="viewfinder-temp">-63°C</span></div>
+        <div><span class="rec-dot"></span> MARS CAM [SOL 142]</div>
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+          <span>BATT</span>
+          <span class="viewfinder-battery-shell"><span id="viewfinder-battery-bar" class="viewfinder-battery-fill" style="width: 94%;"></span></span>
+          <span id="viewfinder-battery">94%</span>
+          <span style="margin-left: 8px;">TEMP: <span id="viewfinder-temp">-63°C</span></span>
+        </div>
         <div id="viewfinder-mode-label" style="color: #38bdf8; font-weight: bold; margin-top: 2px;">MODE: ATMOSPHERIC SKY CLIMATE SURVEY</div>
       </div>
-      
+
       <!-- Viewfinder Reticle & Grid Lines -->
-      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; height: 280px; border: 1px dashed rgba(34, 197, 94, 0.6); pointer-events: none;">
+      <div class="viewfinder-reticle" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; height: 280px; border: 1px dashed rgba(34, 197, 94, 0.6); pointer-events: none;">
         <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; border: 2px solid #22c55e; border-radius: 50%;"></div>
         <div style="position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: rgba(34, 197, 94, 0.4);"></div>
         <div style="position: absolute; top: 0; left: 50%; width: 1px; height: 100%; background: rgba(34, 197, 94, 0.4);"></div>
+        <div style="position: absolute; top: -14px; left: -14px; width: 20px; height: 20px; border-top: 2px solid #22c55e; border-left: 2px solid #22c55e;"></div>
+        <div style="position: absolute; top: -14px; right: -14px; width: 20px; height: 20px; border-top: 2px solid #22c55e; border-right: 2px solid #22c55e;"></div>
+        <div style="position: absolute; bottom: -14px; left: -14px; width: 20px; height: 20px; border-bottom: 2px solid #22c55e; border-left: 2px solid #22c55e;"></div>
+        <div style="position: absolute; bottom: -14px; right: -14px; width: 20px; height: 20px; border-bottom: 2px solid #22c55e; border-right: 2px solid #22c55e;"></div>
+      </div>
+
+      <!-- Shown briefly right after a photo is taken -->
+      <div class="viewfinder-captured-banner">
+        <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> IMAGE SAVED
       </div>
 
       <!-- Action Prompt Banner -->
@@ -503,11 +751,11 @@
       </div>
     </div>
 
-    <!-- MARS ROVER TEST TUBE SAMPLING PROMPT OVERLAY (E key) -->
+    <!-- MARS ROVER TEST TUBE SAMPLING PROMPT OVERLAY (E / C key) -->
     <div id="mars-arm-prompt" class="hud-overlay hidden font-mono" style="pointer-events: none; z-index: 120;">
       <div style="position: absolute; top: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 2px solid #10b981; color: #fff; padding: 14px 30px; text-align: center; pointer-events: auto;">
         <div style="font-weight: 900; font-size: 1.1rem; color: #10b981; margin-bottom: 4px;">TEST TUBE ROBOTIC SAMPLER ACTIVE</div>
-        <div style="font-size: 0.85rem; color: #e2e8f0;" id="arm-prompt-desc">CLICK A GREEN-BORDERED SOIL REGION TO SCOOP SAMPLE INTO TEST TUBE</div>
+        <div style="font-size: 0.85rem; color: #e2e8f0;" id="arm-prompt-desc">PRESS [C] OR [ENTER] TO SCOOP SOIL SAMPLE INTO TEST TUBE</div>
         <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Press [E] or [ESC] to exit sampling view.</div>
       </div>
     </div>
@@ -515,11 +763,14 @@
     <!-- DISCOVERY TOAST BANNER -->
     <div id="mars-discovery-toast" class="modal hidden" style="background: rgba(0,0,0,0.5);">
       <div class="modal-content minimal-panel text-center font-mono" style="border: 2px solid #f59e0b; background: #000; color: #fff;">
-        <h2 id="discovery-toast-title" style="color: #f59e0b; margin-bottom: 10px;">★ NEW DISCOVERY DETECTED ★</h2>
+        <h2 id="discovery-toast-title" style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #f59e0b; margin-bottom: 10px;">
+          <svg class="ui-icon star-gold" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>NEW DISCOVERY DETECTED</span>
+        </h2>
         <div id="discovery-toast-desc" style="font-size: 0.95rem; line-height: 1.5; margin-bottom: 15px;">
           Discovery details here...
         </div>
-        <button id="btn-discovery-dismiss" class="brief-btn next">LOG DISCOVERY</button>
+        <button id="btn-discovery-dismiss" class="game-btn btn-primary">LOG DISCOVERY</button>
       </div>
     </div>
 
@@ -531,8 +782,522 @@
       </div>
     </div>
     
-    <!-- CAMERA FLASH ANIMATION OVERLAY -->
-    <div id="mars-camera-flash" style="position: fixed; inset: 0; background: #ffffff; z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 0.25s ease-out;"></div>
+    <!-- MISSION 4: TELESCOPE OBSERVATION & MEMORY RECONSTRUCTION SCREEN -->
+    <section id="telescope-screen" class="ui-screen font-mono">
+      <!-- 1. PLANET SELECTION VIEW -->
+      <div id="telescope-planet-selection" class="telescope-view active">
+        <div class="selection-header text-center">
+          <h2 class="panel-header" style="font-size: 1.8rem; letter-spacing: 2px;">CHOOSE A PLANET TO OBSERVE</h2>
+          <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 4px;">Select one planet for your telescope observation.</p>
+        </div>
+
+        <div id="telescope-planet-grid" class="telescope-planet-grid">
+          <!-- 8 Planet Observation Cards populated via JS -->
+        </div>
+
+        <div class="selection-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+          <button id="btn-tel-back" class="game-btn btn-secondary">BACK TO MISSIONS</button>
+          <button id="btn-tel-begin-obs" class="game-btn btn-primary disabled" disabled>BEGIN OBSERVATION</button>
+        </div>
+      </div>
+
+      <!-- 2. TELESCOPE OBSERVATION VIEW -->
+      <div id="telescope-observation-view" class="telescope-view hidden">
+        <div class="obs-header text-center">
+          <div style="font-size: 0.85rem; color: #38bdf8; letter-spacing: 3px; font-weight: 800;">TELESCOPE OBSERVATION</div>
+          <h2 id="tel-obs-planet-name" style="font-size: 2.2rem; color: #fff; margin: 4px 0; text-transform: uppercase;">MARS</h2>
+          <div id="tel-obs-phase-tracker" class="phase-badge" style="display: inline-block; background: rgba(56,189,248,0.15); border: 1px solid #38bdf8; color: #38bdf8; padding: 4px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 800;">
+            VIEW 1 / 5
+          </div>
+        </div>
+
+        <!-- CIRCULAR TELESCOPE LENS VIEWPORT WITH NEXT VIEW ARROW BUTTON -->
+        <div class="telescope-viewport-container">
+          <div class="telescope-lens-frame">
+            <img id="telescope-2d-img" class="telescope-2d-view-img" src="" alt="Telescope Observation View">
+            <div class="lens-glass-overlay"></div>
+            <div class="lens-reticle-crosshair"></div>
+            <div class="lens-aperture-ring"></div>
+          </div>
+          <button id="btn-tel-next-phase" class="circular-arrow-btn" title="Next Observation View">
+            <span class="arrow-icon">
+              <svg class="ui-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </span>
+          </button>
+        </div>
+
+        <div id="tel-obs-badge" class="obs-status-badge text-center">
+          <span id="tel-obs-badge-text">SETTLING TELESCOPE APERTURE...</span>
+        </div>
+      </div>
+
+      <!-- 3. RECONSTRUCTION SCREEN -->
+      <div id="telescope-reconstruction-view" class="telescope-view hidden">
+        <div class="reconstruct-header text-center">
+          <h2 style="font-size: 1.8rem; color: #38bdf8; margin-bottom: 4px;">RECONSTRUCT THE OBSERVATION</h2>
+          <p style="color: #cbd5e1; font-size: 0.95rem;">Arrange the planet views in the order you observed them.</p>
+        </div>
+
+        <!-- 5 GREY DROP TARGET BOXES -->
+        <div class="drop-boxes-container">
+          <div class="drop-boxes-row font-mono">
+            <div class="drop-box" data-slot="0"><span class="box-slot-num">1</span></div>
+            <div class="drop-box" data-slot="1"><span class="box-slot-num">2</span></div>
+            <div class="drop-box" data-slot="2"><span class="box-slot-num">3</span></div>
+            <div class="drop-box" data-slot="3"><span class="box-slot-num">4</span></div>
+            <div class="drop-box" data-slot="4"><span class="box-slot-num">5</span></div>
+          </div>
+          <div class="east-west-indicator">
+            <span>EAST</span>
+            <span class="arrow-line" style="display: inline-flex; align-items: center; gap: 4px;">
+              <span style="display:inline-block; height: 1px; width: 100px; background: rgba(255,255,255,0.3);"></span>
+              <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </span>
+            <span>WEST</span>
+          </div>
+        </div>
+
+        <!-- DRAGGABLE CARDS STACK CONTAINER -->
+        <div class="reconstruct-deck-area">
+          <div class="deck-label">OBSERVATION CARDS DECK:</div>
+          <div id="telescope-cards-stack" class="cards-stack">
+            <!-- Phase Cards populated dynamically -->
+          </div>
+        </div>
+
+        <!-- GREEN GOOEY LIQUID SUBMIT BUTTON (BOTTOM-RIGHT) -->
+        <button id="btn-tel-submit" class="gooey-submit-btn disabled" disabled>
+          <span class="btn-glow"></span>
+          <span class="btn-text">
+            <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            SUBMIT
+          </span>
+        </button>
+      </div>
+
+      <!-- VERIFICATION TOAST FEEDBACK -->
+      <div id="telescope-toast" class="telescope-toast hidden">
+        <div id="telescope-toast-content" class="toast-content text-center">
+          <!-- Text inserted via JS -->
+        </div>
+      </div>
+
+      <!-- MISSION COMPLETE MODAL -->
+      <div id="telescope-complete-modal" class="modal hidden">
+        <div class="modal-content minimal-panel text-center font-mono" style="border: 2px solid #22c55e; background: #030712; color: #fff; max-width: 520px; padding: 30px;">
+          <div class="mission-outcome-header" style="display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.8rem; color: #22c55e; margin-bottom: 8px; font-weight: 900;">
+            <svg class="ui-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+            <span>MISSION SUCCESSFUL</span>
+          </div>
+          <h2 style="font-size: 1.4rem; color: #38bdf8; margin-bottom: 12px;">FIRST-TRY MASTERY ACHIEVED</h2>
+          <div id="tel-complete-planet" style="font-size: 1.1rem; color: #fef08a; font-weight: 800; margin-bottom: 6px;">PLANET OBSERVED: MARS</div>
+          <div style="font-size: 0.95rem; color: #94a3b8; margin-bottom: 24px;">5 / 5 OBSERVATIONS RECONSTRUCTED ON FIRST TRY</div>
+          <div style="display: flex; gap: 12px; margin-top: 10px;">
+            <button id="btn-tel-complete-restart" class="game-btn btn-secondary" style="flex: 1; padding: 12px;">RESTART MISSION</button>
+            <button id="btn-tel-complete-continue" class="game-btn btn-primary" style="flex: 1.5; padding: 12px;">CONTINUE TO MISSIONS TAB</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MISSION 5: PLANETARY DEFENSE — THE ASTEROID DECISION SCREEN -->
+    <section id="planetary-defense-screen" class="ui-screen font-mono">
+      <!-- 2D Canvas Scene Engine Container -->
+      <div id="pd-canvas-container" style="position: absolute; inset: 0; z-index: 1;"></div>
+
+      <!-- Top Tactical HUD & Comms Controls Bar -->
+      <div id="pd-top-bar" class="pd-top-bar" style="z-index: 50;">
+        <div class="pd-top-left">
+          <span class="pd-badge-mission">MISSION 05</span>
+          <span class="pd-header-title">PLANETARY DEFENSE // THE ASTEROID DECISION</span>
+        </div>
+        
+        <!-- Live Comms Roster -->
+        <div class="pd-top-center">
+          <div class="pd-roster-badge active" data-speaker="ari">
+            <span class="pd-roster-dot"></span> ARI
+          </div>
+          <div class="pd-roster-badge" data-speaker="maya">
+            <span class="pd-roster-dot"></span> MAYA
+          </div>
+          <div class="pd-roster-badge" data-speaker="leo">
+            <span class="pd-roster-dot"></span> LEO
+          </div>
+          <div class="pd-roster-badge" data-speaker="mission_control">
+            <span class="pd-roster-dot"></span> MC
+          </div>
+        </div>
+
+        <div class="pd-top-right">
+          <button id="btn-pd-voice-mute" class="pd-tool-btn game-btn btn-secondary btn-sm" title="Toggle Spoken Dialogue Audio">VOICE: ON</button>
+          <button id="btn-pd-replay-line" class="pd-tool-btn game-btn btn-secondary btn-sm" title="Replay Spoken Line">
+            REPLAY
+            <svg class="ui-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+          </button>
+          <button id="btn-pd-skip-dialogue" class="pd-tool-btn game-btn btn-secondary btn-sm" title="Skip to Next Line">
+            SKIP
+            <svg class="ui-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19" stroke="currentColor" stroke-width="2"/></svg>
+          </button>
+          <button id="btn-pd-debug-toggle" class="pd-tool-btn pd-dbg-btn game-btn btn-secondary btn-sm" title="Toggle Developer Debug HUD">DEBUG [~]</button>
+        </div>
+      </div>
+
+      <!-- Developer Debug HUD Overlay (Toggleable with ~ key) -->
+      <div id="pd-debug-overlay" class="pd-debug-overlay hidden" style="z-index: 90;">
+        <div class="pd-debug-title">MISSION 5 // DEV TELEMETRY MONITOR</div>
+        <div class="pd-debug-grid">
+          <div>SCENE: <strong id="dbg-scene-id">LEVEL_1</strong></div>
+          <div>DECISION: <strong id="dbg-decision-id">D1</strong></div>
+          <div>ENDING: <strong id="dbg-ending-id">--</strong></div>
+          <div>AUDIO: <strong id="dbg-audio-status">IDLE</strong></div>
+        </div>
+      </div>
+
+      <!-- Decision Confirmation Suspense Banner (Shown briefly upon selection) -->
+      <div id="pd-decision-confirm-banner" class="pd-decision-confirm-banner hidden" style="z-index: 180;">
+        <div class="pd-confirm-box">
+          <div class="pd-confirm-tag">DECISION CONFIRMED</div>
+          <div id="pd-confirm-choice-text" class="pd-confirm-choice">STUDY THE ASTEROID</div>
+          <div class="pd-confirm-sub">TRANSMITTING MISSION DIRECTIVE TO COMMAND FLEET...</div>
+        </div>
+      </div>
+
+      <!-- Character Dialogue & Expression Overlay (Bottom Center) -->
+      <div id="pd-dialogue-panel" class="pd-dialogue-panel hidden" style="z-index: 100;">
+        <div class="pd-portrait-wrapper">
+          <img id="pd-char-portrait-img" src="" alt="Character Portrait">
+        </div>
+        <div class="pd-dialogue-content">
+          <div class="pd-speaker-header">
+            <span id="pd-speaker-name" class="pd-speaker-name">COMMANDER ARI</span>
+            <span id="pd-speaker-role" class="pd-speaker-role">MISSION COMMANDER</span>
+            <span class="pd-audio-indicator">
+              <svg class="ui-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+              AUDIO SYNC
+            </span>
+          </div>
+          <div id="pd-dialogue-text" class="pd-dialogue-text">
+            Loading mission telemetry...
+          </div>
+        </div>
+      </div>
+
+      <!-- Decision Panel Overlay (Center Screen) -->
+      <div id="pd-decision-panel" class="pd-decision-panel hidden" style="z-index: 200;">
+        <div class="pd-decision-card minimal-panel text-center">
+          <div id="pd-decision-title" class="pd-decision-title">WHAT SHOULD WE DO?</div>
+          <div id="pd-decision-sub" class="pd-decision-sub">Choose primary defense strategy:</div>
+          <div id="pd-decision-options" class="pd-decision-options">
+            <!-- Options populated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Educational Ending Summary Card Modal -->
+      <div id="pd-ending-modal" class="modal hidden" style="z-index: 300;">
+        <div class="modal-content minimal-panel text-center font-mono" style="border: 2px solid #38bdf8; background: #030712; color: #fff; max-width: 620px; padding: 32px; box-shadow: 0 0 50px rgba(56, 189, 248, 0.45);">
+          <div id="pd-ending-key" style="font-size: 1rem; color: #f59e0b; font-weight: 800; letter-spacing: 2px; margin-bottom: 6px;">ENDING A1</div>
+          <div class="mission-outcome-header" style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1.8rem; color: #22c55e; margin-bottom: 6px; font-weight: 900;">
+            <svg class="ui-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+            <span>MISSION OUTCOME</span>
+          </div>
+          <h2 id="pd-ending-title" style="font-size: 1.5rem; color: #38bdf8; margin-bottom: 6px; text-transform: uppercase;">LARGE TRAJECTORY CHANGE</h2>
+          <div id="pd-ending-status" style="display: inline-block; background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #22c55e; padding: 4px 16px; border-radius: 12px; font-size: 0.8rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 20px;">HIGH DEFLECTION ACHIEVED</div>
+
+          <div style="text-align: left; background: rgba(15, 23, 42, 0.9); border: 1px solid #334155; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+            <div style="font-weight: 900; color: #38bdf8; margin-bottom: 6px; letter-spacing: 1px;">WHAT HAPPENED:</div>
+            <div id="pd-ending-happened" style="font-size: 0.92rem; color: #cbd5e1; line-height: 1.5;">...</div>
+          </div>
+
+          <div style="text-align: left; background: rgba(6, 78, 59, 0.4); border: 1px solid #22c55e; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+            <div style="font-weight: 900; color: #22c55e; margin-bottom: 6px; letter-spacing: 1px;">WHAT YOU LEARNED:</div>
+            <div id="pd-ending-learned" style="font-size: 0.92rem; color: #fef08a; line-height: 1.5;">...</div>
+          </div>
+
+          <div style="display: flex; gap: 14px;">
+            <button id="btn-pd-replay" class="game-btn btn-secondary" style="flex: 1; padding: 14px;">REPLAY MISSION</button>
+            <button id="btn-pd-map" class="game-btn btn-primary" style="flex: 1.5; padding: 14px;">RETURN TO MISSION MAP</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MISSION 6: MESSENGER — THE MERCURY MISSION SCREEN -->
+    <section id="mission6-screen" class="ui-screen font-mono">
+      <!-- 1. Briefing Modal / Chalkboard Intro -->
+      <div id="mission6-briefing" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+        <div class="relative max-w-2xl w-full bg-slate-900/90 border-2 border-cyan-500/60 rounded-xl p-8 shadow-2xl text-slate-100">
+          <div class="flex items-center justify-between border-b border-cyan-500/30 pb-4 mb-6">
+            <span class="text-xs font-bold tracking-widest text-cyan-400 bg-cyan-950/60 px-3 py-1 rounded border border-cyan-500/40">NASA MESSENGER MISSION // 2004–2015</span>
+            <span class="text-xs text-slate-400 font-mono">MISSION 06</span>
+          </div>
+          
+          <h1 class="text-3xl font-extrabold text-cyan-300 tracking-wide mb-2">MESSENGER — MERCURY EXPLORER</h1>
+          <p class="text-sm text-cyan-200/80 mb-6 font-mono uppercase tracking-widest">ORBIT. OBSERVE. DISCOVER.</p>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-xs leading-relaxed">
+            <div class="bg-slate-950/60 border border-slate-800 p-4 rounded-lg">
+              <h3 class="text-cyan-400 font-bold mb-2 flex items-center gap-2">
+                <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+                HISTORICAL TELEMETRY
+              </h3>
+              <ul class="space-y-1.5 text-slate-300">
+                <li><strong class="text-slate-100">LAUNCH:</strong> Aug 3, 2004 (Delta II)</li>
+                <li><strong class="text-slate-100">MERCURY INSERTION:</strong> Mar 18, 2011</li>
+                <li><strong class="text-slate-100">IMPACT DATE:</strong> Apr 30, 2015</li>
+                <li><strong class="text-slate-100">TOTAL ORBITS:</strong> 4,105 polar orbits</li>
+                <li><strong class="text-slate-100">PRIMARY DISCOVERY:</strong> Polar Water Ice & Volatiles</li>
+              </ul>
+            </div>
+            
+            <div class="bg-slate-950/60 border border-slate-800 p-4 rounded-lg">
+              <h3 class="text-cyan-400 font-bold mb-2 flex items-center gap-2">
+                <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                MISSION OBJECTIVES
+              </h3>
+              <ul class="space-y-1.5 text-slate-300">
+                <li class="flex items-center gap-1.5">
+                  <svg class="ui-icon text-cyan-400 flex-shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                  <span>Capture <strong class="text-cyan-300">5 Target Surface Photos</strong></span>
+                </li>
+                <li class="flex items-center gap-1.5">
+                  <svg class="ui-icon text-cyan-400 flex-shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></svg>
+                  <span>Run <strong class="text-cyan-300">5 Science Telemetry Scans</strong></span>
+                </li>
+                <li class="flex items-center gap-1.5">
+                  <svg class="ui-icon text-cyan-400 flex-shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg>
+                  <span>Target Lock distance required: <strong class="text-emerald-400">&lt; 480 KM</strong></span>
+                </li>
+                <li class="flex items-center gap-1.5">
+                  <svg class="ui-icon text-cyan-400 flex-shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                  <span>De-orbit spacecraft onto surface after completion</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="flex justify-end">
+            <button id="btn-m6-start-orbit" class="game-btn btn-primary btn-lg">
+              ENTER MERCURY ORBIT
+              <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Orbit Canvas Container & HUD Overlay -->
+      <div id="mission6-orbit-container" class="relative w-full h-full">
+        <div id="mission6-canvas-container" class="absolute inset-0 z-0"></div>
+
+        <!-- Shutter Flash Effect Overlay -->
+        <div id="m6-shutter-flash" class="absolute inset-0 z-40 bg-white opacity-0 pointer-events-none transition-opacity duration-200"></div>
+
+        <!-- Science Scan Beam Visual Effect Overlay -->
+        <div id="m6-scan-beam-effect" class="hidden absolute inset-0 z-30 pointer-events-none border-4 border-cyan-400/50 bg-cyan-500/10 backdrop-brightness-125"></div>
+
+        <!-- Notification Toast -->
+        <div id="m6-notification" class="hidden font-mono"></div>
+
+        <!-- HUD HUD HUD Overlay -->
+        <div id="mission6-hud" class="hidden absolute inset-0 z-20 pointer-events-none flex flex-col justify-between p-6">
+          
+          <!-- Top HUD Header -->
+          <div class="flex items-start justify-between pointer-events-auto">
+            <div class="bg-slate-950/80 border border-cyan-500/40 rounded-lg p-4 backdrop-blur-md max-w-xs w-full">
+              <div class="text-xs text-cyan-400 font-bold tracking-widest mb-1">MESSENGER // MERCURY ORBIT</div>
+              <div class="text-sm font-bold text-slate-100 flex items-center justify-between">
+                <span>ORBIT TIME:</span>
+                <span id="m6-elapsed-time" class="text-cyan-300">00:00</span>
+              </div>
+            </div>
+
+            <!-- Camera View Controls -->
+            <div class="flex items-center gap-2 bg-slate-950/80 border border-cyan-500/40 p-1.5 rounded-lg backdrop-blur-md">
+              <button id="btn-m6-cam-probe" class="px-3 py-1.5 text-xs font-bold rounded border bg-cyan-500/40 border-cyan-400 text-cyan-200 transition-all">PROBE CAM</button>
+              <button id="btn-m6-cam-free" class="px-3 py-1.5 text-xs font-bold rounded border bg-slate-900/60 border-cyan-900/50 text-slate-400 hover:text-cyan-200 transition-all">FREE CAM</button>
+              <button id="btn-m6-cam-planet" class="px-3 py-1.5 text-xs font-bold rounded border bg-slate-900/60 border-cyan-900/50 text-slate-400 hover:text-cyan-200 transition-all">PLANET CAM</button>
+            </div>
+          </div>
+
+          <!-- Center Reticle Indicator -->
+          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex flex-col items-center">
+            <div id="m6-hud-reticle" class="w-64 h-64 border-2 border-red-500 rounded-full flex items-center justify-center relative transition-all duration-300 shadow-lg shadow-red-500/40">
+              <div class="w-2 h-2 bg-cyan-400 rounded-full"></div>
+              <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t border-dashed border-cyan-400/40"></div>
+              <div class="absolute inset-y-0 left-1/2 -translate-x-1/2 border-l border-dashed border-cyan-400/40"></div>
+            </div>
+            <div id="m6-reticle-status" class="mt-4 px-4 py-1.5 bg-slate-950/90 border border-slate-800 rounded text-xs font-bold tracking-widest text-red-400 backdrop-blur-md">
+              [ ALIGNMENT REQUIRED ]
+            </div>
+          </div>
+
+          <!-- Bottom Action Dock & Stats -->
+          <div class="flex items-end justify-between pointer-events-auto">
+            
+            <!-- Left Info Card: Active Target -->
+            <div class="bg-slate-950/80 border border-cyan-500/40 rounded-lg p-4 backdrop-blur-md max-w-sm w-full text-xs space-y-2">
+              <div class="text-cyan-400 font-bold tracking-wider flex items-center justify-between">
+                <span>ACTIVE OBSERVATION ZONE</span>
+                <span id="m6-target-dist" class="text-cyan-200">--- KM</span>
+              </div>
+              <div id="m6-target-name" class="text-base font-bold text-white uppercase tracking-wide">APPROACHING ZONE...</div>
+              <div id="m6-target-coords" class="text-slate-400">---° N | ---° E</div>
+            </div>
+
+            <!-- Middle Actions: Capture Buttons -->
+            <div class="flex items-center gap-4">
+              <button id="btn-m6-capture-photo" class="game-btn btn-primary btn-lg" style="gap: 8px;">
+                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                CAPTURE IMAGE
+              </button>
+              <button id="btn-m6-run-scan" class="game-btn btn-primary btn-lg" style="background: linear-gradient(180deg, #4f46e5 0%, #3730a3 100%); border-color: #818cf8; gap: 8px;">
+                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></svg>
+                RUN SCIENCE SCAN
+              </button>
+            </div>
+
+            <!-- Right Info Card: Objectives Progress -->
+            <div class="bg-slate-950/80 border border-cyan-500/40 rounded-lg p-4 backdrop-blur-md max-w-xs w-full text-xs space-y-3">
+              <div>
+                <div class="flex justify-between text-slate-300 font-bold mb-1">
+                  <span>SURFACE IMAGES:</span>
+                  <span id="m6-photo-count" class="text-cyan-400">0 / 5</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-700">
+                  <div id="m6-photo-bar" class="bg-cyan-400 h-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-slate-300 font-bold mb-1">
+                  <span>SCIENCE SCANS:</span>
+                  <span id="m6-science-count" class="text-indigo-400">0 / 5</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-700">
+                  <div id="m6-science-bar" class="bg-indigo-400 h-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Photo Result Display Card Modal -->
+      <div id="m6-photo-result-card" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+        <div class="bg-slate-900 border-2 border-cyan-400 rounded-xl p-6 max-w-md w-full shadow-2xl text-slate-100">
+          <div class="flex items-center justify-between mb-4 border-b border-cyan-500/30 pb-2">
+            <span class="flex items-center gap-1.5 text-xs font-bold text-cyan-400 tracking-widest">
+              <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              IMAGE ACQUIRED
+            </span>
+            <span id="m6-photo-title" class="text-xs font-bold text-slate-300 uppercase">DEGAS CRATER</span>
+          </div>
+          
+          <div id="m6-photo-img-container" class="w-full h-64 bg-slate-950 rounded mb-4 overflow-hidden flex items-center justify-center border border-slate-800"></div>
+          
+          <div id="m6-photo-coords" class="text-xs text-slate-400 mb-6 font-mono leading-relaxed">
+            LAT: 37.4° N | LON: 127.0° E
+          </div>
+
+          <div class="flex justify-end">
+            <button id="m6-photo-close-btn" class="game-btn btn-primary btn-sm">
+              STORE IN TELEMETRY LOG
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Science Scan Result Card Modal -->
+      <div id="m6-scan-result-card" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+        <div class="bg-slate-900 border-2 border-indigo-400 rounded-xl p-6 max-w-md w-full shadow-2xl text-slate-100 font-mono">
+          <div class="flex items-center justify-between mb-4 border-b border-indigo-500/30 pb-2">
+            <span class="flex items-center gap-1.5 text-xs font-bold text-indigo-400 tracking-widest">
+              <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              SCIENCE TELEMETRY SCAN STORED
+            </span>
+            <span id="m6-scan-title" class="text-xs font-bold text-slate-300 uppercase">BOREALIS PLANITIA</span>
+          </div>
+
+          <div class="space-y-3 text-xs bg-slate-950 p-4 rounded border border-slate-800 mb-6">
+            <div><span class="text-slate-400">MINERAL COMPOSITION:</span> <span id="m6-scan-composition" class="text-indigo-300 font-bold">High-Mg Effusive Basalt</span></div>
+            <div><span class="text-slate-400">MAGNETIC FLUX:</span> <span id="m6-scan-flux" class="text-amber-300 font-bold">180 nT</span></div>
+            <div><span class="text-slate-400">DATA TRANSMISSION:</span> <span class="text-emerald-400 font-bold">100% COMPLETE</span></div>
+          </div>
+
+          <div class="flex justify-end">
+            <button id="m6-scan-close-btn" class="game-btn btn-primary btn-sm">
+              CONFIRM TELEMETRY
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historical MESSENGER Telemetry Modal -->
+      <div id="mission6-telemetry-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+        <div class="max-w-xl w-full bg-slate-900 border-2 border-cyan-400 rounded-xl p-8 shadow-2xl text-slate-100 font-mono">
+          <div class="text-xs font-bold text-amber-400 tracking-widest mb-1">HISTORICAL MISSION TELEMETRY</div>
+          <h2 class="text-2xl font-extrabold text-cyan-300 mb-4">MESSENGER FINAL ORBIT LOG</h2>
+          
+          <div class="bg-slate-950 border border-slate-800 rounded-lg p-5 mb-6 text-xs space-y-2 leading-relaxed">
+            <div><strong class="text-slate-200">TIMESTAMP:</strong> April 30, 2015 — 19:26:01 UTC</div>
+            <div><strong class="text-slate-200">IMPACT VELOCITY:</strong> ~3.912 km/s (8,750 mph)</div>
+            <div><strong class="text-slate-200">EXPECTED CRATER:</strong> ~16 meters wide</div>
+            <div><strong class="text-slate-200">MISSION DURATION:</strong> 4 Years, 1 Month, 12 Days (4,105 Orbits)</div>
+            <div><strong class="text-slate-200">IMAGES DELIVERED:</strong> 255,858 Photographs returned to Earth</div>
+            <p class="text-slate-400 pt-2 border-t border-slate-800">
+              Having depleted its hydrazine propellant after 4 years of historic discoveries, NASA's MESSENGER spacecraft was commanded to perform a de-orbit descent, crashing onto Mercury's far side surface.
+            </p>
+          </div>
+
+          <button id="btn-m6-trigger-descent" class="game-btn btn-primary btn-lg w-full" style="background: linear-gradient(180deg, #d97706 0%, #b45309 100%); border-color: #fbbf24;">
+            INITIATE HISTORICAL DE-ORBIT DESCENT & IMPACT
+            <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mission Victory Modal -->
+      <div id="mission6-complete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+        <div class="max-w-lg w-full bg-slate-900 border-2 border-emerald-400 rounded-xl p-8 shadow-2xl text-slate-100 font-mono text-center">
+          <div class="mission-outcome-header" style="display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.8rem; color: #22c55e; margin-bottom: 8px; font-weight: 900;">
+            <svg class="ui-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+            <span>MISSION SUCCESSFUL</span>
+          </div>
+          <h2 class="text-xl font-bold text-cyan-300 mb-6">MESSENGER EXPEDITION CONCLUDED</h2>
+
+          <div class="grid grid-cols-3 gap-3 bg-slate-950 p-4 rounded-lg border border-slate-800 mb-6 text-xs">
+            <div>
+              <div class="text-slate-400">TOTAL TIME</div>
+              <div id="m6-final-time" class="text-cyan-300 font-bold text-sm">00:00</div>
+            </div>
+            <div>
+              <div class="text-slate-400">PHOTOS / DATA</div>
+              <div id="m6-final-photos" class="text-emerald-300 font-bold text-sm">5 / 5</div>
+            </div>
+            <div>
+              <div class="text-slate-400">FINAL SCORE</div>
+              <div id="m6-final-score" class="text-amber-300 font-bold text-sm">2500 PTS</div>
+            </div>
+          </div>
+
+          <div class="p-4 bg-emerald-950/40 border border-emerald-500/40 rounded-lg text-xs text-emerald-200 leading-relaxed mb-8 text-left">
+            <strong class="text-emerald-300">MESSENGER'S HISTORICAL LEGACY:</strong><br>
+            First spacecraft to orbit Mercury! Confirmed water ice in permanently shadowed polar craters, mapped 100% of Mercury's surface, discovered surface hollows, and proved Mercury's inner iron core is disproportionately large.
+          </div>
+
+          <div class="flex items-center gap-4">
+            <button id="btn-m6-restart" class="game-btn btn-secondary flex-1">
+              RESTART MISSION
+            </button>
+            <button id="btn-m6-mission-tab" class="game-btn btn-primary flex-1">
+              CONTINUE TO MISSION TAB
+              <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- JS main entry -->
     <script type="module" src="/src/main.js"></script>

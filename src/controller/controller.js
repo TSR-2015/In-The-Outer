@@ -31,6 +31,9 @@ class PhoneController {
     // Active movement directions set
     this.activeDirections = new Set();
     this.isActionDebouncing = false;
+    this.dpadPointerId = null;
+    this.dpadStreamTimer = null;
+    this.pauseDebounce = false;
 
     // DOM Elements Cache
     this.els = {};
@@ -91,6 +94,7 @@ class PhoneController {
     this.els.spectatorDeck = document.getElementById('spectator-deck');
     this.els.modePill = document.getElementById('controller-mode-pill');
     this.els.lcdStatusMsg = document.getElementById('lcd-status-msg');
+    this.els.dpadCross = document.getElementById('dpad-cross');
     this.els.dpadButtons = document.querySelectorAll('.dpad-btn');
     this.els.btnA = document.getElementById('btn-action-a');
     this.els.btnB = document.getElementById('btn-action-b');
@@ -610,13 +614,18 @@ class PhoneController {
     // 4. Hardware Pause Controls (Host only if on controller)
     const handlePauseToggle = (e) => {
       e.preventDefault();
-      this.vibrate(30);
+      if (this.pauseDebounce) return;
+      this.pauseDebounce = true;
+      setTimeout(() => { this.pauseDebounce = false; }, 350);
+
       if (!this.state.isHost) {
+        this.vibrate(50);
         if (this.els.lcdStatusMsg) {
           this.els.lcdStatusMsg.textContent = 'ONLY HOST CAN PAUSE MISSION';
         }
         return;
       }
+      this.vibrate(30);
       this.send({
         type: this.state.view === 'PAUSED' ? 'GAME_STATE_RESUME' : 'GAME_STATE_PAUSE',
         roomId: this.roomId,
@@ -625,11 +634,12 @@ class PhoneController {
     };
 
     if (this.els.btnHardwarePause) {
-      this.els.btnHardwarePause.addEventListener('touchstart', handlePauseToggle, { passive: false });
-      this.els.btnHardwarePause.addEventListener('click', handlePauseToggle);
+      this.els.btnHardwarePause.addEventListener('pointerdown', handlePauseToggle, { passive: false });
+      this.els.btnHardwarePause.addEventListener('click', (e) => e.preventDefault());
     }
     if (this.els.btnPauseResume) {
-      this.els.btnPauseResume.addEventListener('click', handlePauseToggle);
+      this.els.btnPauseResume.addEventListener('pointerdown', handlePauseToggle, { passive: false });
+      this.els.btnPauseResume.addEventListener('click', (e) => e.preventDefault());
     }
     if (this.els.btnPauseExit) {
       this.els.btnPauseExit.addEventListener('click', (e) => {
@@ -650,36 +660,77 @@ class PhoneController {
       });
     }
 
-    // 5. Tactile Gamepad Inputs (D-Pad)
-    this.els.dpadButtons.forEach(btn => {
-      const dir = btn.dataset.dir;
+    // 5. Tactile Gamepad Inputs (D-Pad Surface with Pointer Capture)
+    if (this.els.dpadCross) {
+      const dpad = this.els.dpadCross;
 
-      const onPress = (e) => {
+      const onDpadDown = (e) => {
         e.preventDefault();
-        btn.classList.add('pressed');
+        this.dpadPointerId = e.pointerId;
+        try {
+          dpad.setPointerCapture(e.pointerId);
+        } catch (_) {}
+
         this.vibrate(20);
-        this.activeDirections.add(dir);
-        this.sendRoverMove(dir, true);
+        const dirs = this.calculateDirection(e.clientX, e.clientY);
+        if (dirs.size === 0 && e.target) {
+          const btn = e.target.closest('.dpad-btn');
+          if (btn && btn.dataset.dir) dirs.add(btn.dataset.dir);
+        }
+        this.updateActiveDirections(dirs);
+        this.startDpadStream();
       };
 
-      const onRelease = (e) => {
-        e.preventDefault();
-        btn.classList.remove('pressed');
-        this.activeDirections.delete(dir);
-        this.sendRoverMove(dir, false);
+      const onDpadMove = (e) => {
+        if (this.dpadPointerId !== null && e.pointerId === this.dpadPointerId) {
+          e.preventDefault();
+          const dirs = this.calculateDirection(e.clientX, e.clientY);
+          this.updateActiveDirections(dirs);
+        }
       };
 
-      btn.addEventListener('touchstart', onPress, { passive: false });
-      btn.addEventListener('touchend', onRelease, { passive: false });
-      btn.addEventListener('touchcancel', onRelease, { passive: false });
-      btn.addEventListener('mousedown', onPress);
-      btn.addEventListener('mouseup', onRelease);
-      btn.addEventListener('mouseleave', onRelease);
+      const onDpadUp = (e) => {
+        if (this.dpadPointerId !== null && e.pointerId === this.dpadPointerId) {
+          e.preventDefault();
+          try {
+            dpad.releasePointerCapture(e.pointerId);
+          } catch (_) {}
+          this.clearAllDirections();
+        }
+      };
+
+      dpad.addEventListener('pointerdown', onDpadDown, { passive: false });
+      dpad.addEventListener('pointermove', onDpadMove, { passive: false });
+      dpad.addEventListener('pointerup', onDpadUp, { passive: false });
+      dpad.addEventListener('pointercancel', onDpadUp, { passive: false });
+    }
+
+    // Safety: Global release triggers to prevent stuck buttons
+    window.addEventListener('pointerup', () => {
+      if (this.dpadPointerId !== null) this.clearAllDirections();
+    });
+    window.addEventListener('blur', () => this.clearAllDirections());
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) this.clearAllDirections();
     });
 
+    const bindActionBtn = (btn, actionFn) => {
+      if (!btn) return;
+      let lastTrigger = 0;
+      const trigger = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const now = Date.now();
+        if (now - lastTrigger < 300) return;
+        lastTrigger = now;
+        actionFn();
+      };
+      btn.addEventListener('pointerdown', trigger, { passive: false });
+      btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); });
+    };
+
     // 6. Action Button A (Photo Mode Toggle)
-    const handleBtnA = (e) => {
-      e.preventDefault();
+    bindActionBtn(this.els.btnA, () => {
       this.vibrate(25);
       if (this.els.btnA) {
         this.els.btnA.classList.add('pressed');
@@ -694,15 +745,10 @@ class PhoneController {
         this.state.missionMode = 'PHOTO';
       }
       this.renderFromState();
-    };
-    if (this.els.btnA) {
-      this.els.btnA.addEventListener('touchstart', handleBtnA, { passive: false });
-      this.els.btnA.addEventListener('click', handleBtnA);
-    }
+    });
 
     // 7. Action Button B (Sample Mode Toggle)
-    const handleBtnB = (e) => {
-      e.preventDefault();
+    bindActionBtn(this.els.btnB, () => {
       this.vibrate(25);
       if (this.els.btnB) {
         this.els.btnB.classList.add('pressed');
@@ -717,15 +763,10 @@ class PhoneController {
         this.state.missionMode = 'SAMPLE';
       }
       this.renderFromState();
-    };
-    if (this.els.btnB) {
-      this.els.btnB.addEventListener('touchstart', handleBtnB, { passive: false });
-      this.els.btnB.addEventListener('click', handleBtnB);
-    }
+    });
 
     // 8. Action Button C (Confirm / Capture / Sample)
-    const handleBtnC = (e) => {
-      e.preventDefault();
+    bindActionBtn(this.els.btnC, () => {
       this.vibrate(35);
       if (this.els.btnC) {
         this.els.btnC.classList.add('pressed');
@@ -737,29 +778,159 @@ class PhoneController {
       if (this.state.missionMode === 'PHOTO') {
         this.isActionDebouncing = true;
         this.send({ type: 'CAPTURE_PHOTO', roomId: this.roomId, playerId: this.playerId });
-        setTimeout(() => { this.isActionDebouncing = false; }, 1000);
+        setTimeout(() => { this.isActionDebouncing = false; }, 800);
       } else if (this.state.missionMode === 'SAMPLE') {
         this.isActionDebouncing = true;
         this.send({ type: 'COLLECT_SAMPLE', roomId: this.roomId, playerId: this.playerId, payload: { inRange: true } });
-        setTimeout(() => { this.isActionDebouncing = false; }, 1000);
+        setTimeout(() => { this.isActionDebouncing = false; }, 800);
       } else {
         if (this.els.lcdStatusMsg) {
           this.els.lcdStatusMsg.textContent = 'SCANNING MARTIAN TERRAIN...';
         }
       }
-    };
-    if (this.els.btnC) {
-      this.els.btnC.addEventListener('touchstart', handleBtnC, { passive: false });
-      this.els.btnC.addEventListener('click', handleBtnC);
-    }
+    });
 
     // 9. Results View Return to Lobby
     if (this.els.btnResultReturn) {
-      this.els.btnResultReturn.addEventListener('click', (e) => {
+      this.els.btnResultReturn.addEventListener('pointerdown', (e) => {
         e.preventDefault();
         this.vibrate(30);
         this.setState({ view: 'LOBBY', isReady: false });
       });
+      this.els.btnResultReturn.addEventListener('click', (e) => e.preventDefault());
+    }
+  }
+
+  calculateDirection(clientX, clientY) {
+    if (!this.els.dpadCross) return new Set();
+    const rect = this.els.dpadCross.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const dx = clientX - centerX;
+    const dy = clientY - centerY;
+    const dist = Math.hypot(dx, dy);
+
+    // Deadzone: center 12% radius
+    if (dist < rect.width * 0.12) {
+      return new Set();
+    }
+
+    const dirs = new Set();
+    const angle = Math.atan2(dy, dx) * 180 / Math.PI; // -180 to 180
+
+    // 8-way directional mapping
+    if (angle >= -112.5 && angle <= -67.5) {
+      dirs.add('up');
+    } else if (angle > -67.5 && angle < -22.5) {
+      dirs.add('up');
+      dirs.add('right');
+    } else if (angle >= -22.5 && angle <= 22.5) {
+      dirs.add('right');
+    } else if (angle > 22.5 && angle < 67.5) {
+      dirs.add('down');
+      dirs.add('right');
+    } else if (angle >= 67.5 && angle <= 112.5) {
+      dirs.add('down');
+    } else if (angle > 112.5 && angle < 157.5) {
+      dirs.add('down');
+      dirs.add('left');
+    } else if (angle >= -157.5 && angle < -112.5) {
+      dirs.add('up');
+      dirs.add('left');
+    } else {
+      dirs.add('left');
+    }
+
+    return dirs;
+  }
+
+  updateActiveDirections(newDirs) {
+    const areSetsEqual = (a, b) => a.size === b.size && [...a].every(x => b.has(x));
+    if (areSetsEqual(this.activeDirections, newDirs)) {
+      return;
+    }
+
+    this.activeDirections = new Set(newDirs);
+
+    // Update D-Pad visual states
+    if (this.els.dpadButtons) {
+      this.els.dpadButtons.forEach(btn => {
+        const d = btn.dataset.dir;
+        btn.classList.toggle('pressed', this.activeDirections.has(d));
+      });
+    }
+
+    if (this.activeDirections.size > 0) {
+      // Auto-exit photo/sample mode when moving
+      if (this.state.missionMode !== 'DRIVE') {
+        this.send({ type: 'EXIT_MODES', roomId: this.roomId, playerId: this.playerId });
+        this.state.missionMode = 'DRIVE';
+        this.renderFromState();
+      }
+      this.sendRoverMoveState();
+    } else {
+      this.sendRoverStop();
+    }
+  }
+
+  startDpadStream() {
+    if (this.dpadStreamTimer) clearInterval(this.dpadStreamTimer);
+    this.dpadStreamTimer = setInterval(() => {
+      if (this.activeDirections.size > 0) {
+        this.sendRoverMoveState();
+      } else {
+        this.clearAllDirections();
+      }
+    }, 100);
+  }
+
+  clearAllDirections() {
+    if (this.dpadStreamTimer) {
+      clearInterval(this.dpadStreamTimer);
+      this.dpadStreamTimer = null;
+    }
+    this.dpadPointerId = null;
+    if (this.activeDirections.size > 0) {
+      this.activeDirections.clear();
+      if (this.els.dpadButtons) {
+        this.els.dpadButtons.forEach(btn => btn.classList.remove('pressed'));
+      }
+      this.sendRoverStop();
+    }
+  }
+
+  sendRoverMoveState() {
+    const keys = {
+      forward: this.activeDirections.has('up'),
+      backward: this.activeDirections.has('down'),
+      left: this.activeDirections.has('left'),
+      right: this.activeDirections.has('right')
+    };
+
+    // Primary: full state sync
+    this.send({
+      type: 'ROVER_MOVE_STATE',
+      roomId: this.roomId,
+      playerId: this.playerId,
+      payload: keys
+    });
+
+    // Secondary: individual direction events for backwards compatibility
+    for (const d of ['up', 'down', 'left', 'right']) {
+      this.sendRoverMove(d, this.activeDirections.has(d));
+    }
+  }
+
+  sendRoverStop() {
+    this.send({
+      type: 'ROVER_STOP',
+      roomId: this.roomId,
+      playerId: this.playerId
+    });
+
+    // Broadcast inactive state to all 4 directions as fallback
+    for (const d of ['up', 'down', 'left', 'right']) {
+      this.sendRoverMove(d, false);
     }
   }
 

@@ -607,6 +607,41 @@ async function startServer() {
         break;
       }
 
+      case 'ROVER_STOP': {
+        const room = rooms[roomId];
+        if (!room) return;
+
+        const player = room.players.find(p => p.id === playerId);
+        if (!player) return;
+
+        if (room.bigScreenWs && room.bigScreenWs.readyState === WebSocket.OPEN) {
+          sendToSocket(room.bigScreenWs, {
+            type: 'ROVER_STOP',
+            playerNumber: player.playerNumber,
+            playerId: player.id
+          });
+        }
+        break;
+      }
+
+      case 'ROVER_MOVE_STATE': {
+        const room = rooms[roomId];
+        if (!room) return;
+
+        const player = room.players.find(p => p.id === playerId);
+        if (!player) return;
+
+        if (room.bigScreenWs && room.bigScreenWs.readyState === WebSocket.OPEN) {
+          sendToSocket(room.bigScreenWs, {
+            type: 'ROVER_MOVE_STATE',
+            playerNumber: player.playerNumber,
+            playerId: player.id,
+            keys: payload.keys || {}
+          });
+        }
+        break;
+      }
+
       // 7. PHOTO MODE TOGGLE (A BUTTON)
       case 'PHOTO_MODE_START': {
         const room = rooms[roomId];

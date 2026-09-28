@@ -167,6 +167,16 @@ class MultiplayerManager {
         break;
       }
 
+      case 'ROVER_STOP': {
+        MarsRoverMissionInstance.handleRemoteStop(msg.playerNumber);
+        break;
+      }
+
+      case 'ROVER_MOVE_STATE': {
+        MarsRoverMissionInstance.handleRemoteMoveState(msg.playerNumber, msg.keys);
+        break;
+      }
+
       case 'PHOTO_MODE_START': {
         MarsRoverMissionInstance.handleRemotePhotoMode(msg.playerNumber);
         break;

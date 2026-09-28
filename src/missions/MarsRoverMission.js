@@ -267,12 +267,50 @@ class MarsRoverMission {
     const p = this.players[playerNum];
     if (!p || this.stage !== 'EXPLORING') return;
 
-    if (direction === 'up') p.keys.forward = active;
-    if (direction === 'down') p.keys.backward = active;
-    if (direction === 'left') p.keys.left = active;
-    if (direction === 'right') p.keys.right = active;
-    if (direction === 'boost') p.keys.boost = active;
-    if (direction === 'brake') p.keys.brake = active;
+    // If actively moving and currently in viewfinder/sampling mode, automatically exit back to drive
+    if (active && (p.inViewfinder || p.inSamplingMode)) {
+      this.handleRemoteExitModes(playerNum);
+    }
+
+    if (direction === 'up') p.keys.forward = !!active;
+    if (direction === 'down') p.keys.backward = !!active;
+    if (direction === 'left') p.keys.left = !!active;
+    if (direction === 'right') p.keys.right = !!active;
+    if (direction === 'boost') p.keys.boost = !!active;
+    if (direction === 'brake') p.keys.brake = !!active;
+
+    p.lastMoveTimestamp = performance.now();
+  }
+
+  handleRemoteMoveState(playerNum, keys = {}) {
+    const p = this.players[playerNum];
+    if (!p || this.stage !== 'EXPLORING') return;
+
+    const isMoving = keys.forward || keys.backward || keys.left || keys.right;
+    if (isMoving && (p.inViewfinder || p.inSamplingMode)) {
+      this.handleRemoteExitModes(playerNum);
+    }
+
+    p.keys.forward = !!keys.forward;
+    p.keys.backward = !!keys.backward;
+    p.keys.left = !!keys.left;
+    p.keys.right = !!keys.right;
+    if (keys.boost !== undefined) p.keys.boost = !!keys.boost;
+    if (keys.brake !== undefined) p.keys.brake = !!keys.brake;
+
+    p.lastMoveTimestamp = performance.now();
+  }
+
+  handleRemoteStop(playerNum) {
+    const p = this.players[playerNum];
+    if (!p) return;
+    p.keys.forward = false;
+    p.keys.backward = false;
+    p.keys.left = false;
+    p.keys.right = false;
+    p.keys.boost = false;
+    p.keys.brake = false;
+    p.lastMoveTimestamp = 0;
   }
 
   handleRemotePhotoMode(playerNum) {
@@ -457,11 +495,17 @@ class MarsRoverMission {
 
   setPaused(val) {
     this.isPaused = !!val;
+    if (this.isPaused) {
+      [1, 2].forEach(num => this.handleRemoteStop(num));
+    }
     console.log(`[MarsRoverMission] Simulation paused: ${this.isPaused}`);
   }
 
   togglePause() {
     this.isPaused = !this.isPaused;
+    if (this.isPaused) {
+      [1, 2].forEach(num => this.handleRemoteStop(num));
+    }
     console.log(`[MarsRoverMission] Simulation paused: ${this.isPaused}`);
     return this.isPaused;
   }
@@ -494,6 +538,16 @@ class MarsRoverMission {
   updatePlayerRover(playerNum, delta) {
     const p = this.players[playerNum];
     if (!p || p.completed) return;
+
+    // Safety watchdog: auto-release stuck keys if no refresh within 650ms
+    if (p.lastMoveTimestamp && (p.keys.forward || p.keys.backward || p.keys.left || p.keys.right)) {
+      if (performance.now() - p.lastMoveTimestamp > 650) {
+        p.keys.forward = false;
+        p.keys.backward = false;
+        p.keys.left = false;
+        p.keys.right = false;
+      }
+    }
 
     if (!p.inViewfinder && !p.inSamplingMode) {
       const accel = 8.0;
@@ -545,7 +599,19 @@ class MarsRoverMission {
       } else {
         if (!blockedX) p.roverX = nextX;
         if (!blockedZ) p.roverZ = nextZ;
-        if (blockedX && blockedZ) p.speed *= 0.3;
+        if (blockedX && blockedZ) {
+          p.speed *= 0.1;
+          // If reversing away from obstacle, allow moving backwards so player can unstuck
+          if (moveDir < 0 || p.speed < 0) {
+            const revDist = -Math.abs(moveDist || 0.1);
+            const revX = p.roverX + Math.sin(p.roverRotation) * revDist;
+            const revZ = p.roverZ + Math.cos(p.roverRotation) * revDist;
+            if (!MarsRoverSceneInstance.checkRockCollision(revX, revZ)) {
+              p.roverX = revX;
+              p.roverZ = revZ;
+            }
+          }
+        }
       }
 
       p.roverX = Math.max(-110, Math.min(110, p.roverX));

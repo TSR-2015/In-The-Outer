@@ -531,6 +531,9 @@ html, body.controller-body {
   width: 140px;
   height: 140px;
   position: relative;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .dpad-btn {

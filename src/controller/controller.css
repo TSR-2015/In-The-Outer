@@ -486,11 +486,12 @@ html, body.controller-body {
 }
 
 /* =========================================================
-   VIEW 3: MISSION CONTROL VIEW (Registered Per Mission: Mars Rover)
+   VIEW 3: MISSION CONTROL VIEW (True Handheld Vertical Console)
    ========================================================= */
 #view-mission {
   padding: 0;
-  justify-content: space-between;
+  justify-content: center;
+  align-items: center;
 }
 
 .controls-deck {
@@ -498,29 +499,185 @@ html, body.controller-body {
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: 16px;
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
-}
-
-.gamepad-split {
-  display: flex;
   justify-content: space-between;
-  align-items: flex-end;
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-  gap: 16px;
+  align-items: center;
+  padding: 10px 14px 16px 14px;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  position: relative;
+  background: 
+    radial-gradient(ellipse at 50% 10%, #0d162d 0%, #060a14 70%),
+    linear-gradient(180deg, #090e1f 0%, #04060c 100%);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.08), 0 12px 36px rgba(0, 0, 0, 0.9);
 }
 
-/* Molded Tactile D-Pad */
-.dpad-well {
-  width: 180px;
-  height: 180px;
-  background: #080c14;
+/* Molded Chassis Hardware Screws in Corners */
+.chassis-screw {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  font-family: monospace;
+  font-size: 11px;
+  line-height: 14px;
+  text-align: center;
+  color: #334155;
+  background: #090e1a;
   border-radius: 50%;
-  box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 255, 255, 0.08);
-  border: 1px solid #1c2436;
+  border: 1px solid #1c2638;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+  z-index: 10;
+}
+.screw-tl { top: 8px; left: 10px; }
+.screw-tr { top: 8px; right: 10px; }
+.screw-bl { bottom: 8px; left: 10px; }
+.screw-br { bottom: 8px; right: 10px; }
+
+/* Ergonomic Textured Side Grips */
+.chassis-grip {
+  position: absolute;
+  top: 30%;
+  bottom: 25%;
+  width: 5px;
+  background: repeating-linear-gradient(
+    180deg,
+    #1e293b 0px,
+    #1e293b 4px,
+    #090d16 4px,
+    #090d16 8px
+  );
+  border-radius: 3px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+.grip-left { left: 4px; }
+.grip-right { right: 4px; }
+
+/* =========================================================
+   1. TOP CONSOLE SECTION: Molded CRT / LCD Telemetry Display
+   ========================================================= */
+.console-screen-housing {
+  width: 100%;
+  max-width: 400px;
+  margin-top: 4px;
+  z-index: 5;
+}
+
+.lcd-bezel {
+  position: relative;
+  background: #03060c;
+  border: 2px solid #1b263b;
+  border-radius: 12px;
+  padding: 8px 12px;
+  box-shadow: 
+    inset 0 3px 8px rgba(0, 0, 0, 0.95),
+    0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 16px rgba(0, 240, 255, 0.06);
+  overflow: hidden;
+}
+
+.lcd-scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 240, 255, 0.035) 2px,
+    rgba(0, 240, 255, 0.035) 4px
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+.lcd-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  position: relative;
+  z-index: 3;
+}
+
+.lcd-title {
+  font-size: 0.62rem;
+  letter-spacing: 1px;
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+.controller-mode-pill {
+  font-size: 0.68rem;
+  font-weight: 900;
+  padding: 3px 10px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+.mode-drive { background: rgba(53, 208, 127, 0.2); border: 1px solid var(--ctrl-success); color: var(--ctrl-success); }
+.mode-photo { background: rgba(225, 29, 72, 0.25); border: 1px solid var(--btn-a-red); color: var(--btn-a-red-light); }
+.mode-sample { background: rgba(2, 132, 199, 0.25); border: 1px solid var(--btn-b-blue); color: var(--btn-b-blue-light); }
+
+.ctrl-lcd-msg {
+  font-size: 0.74rem;
+  color: #93c5fd;
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  z-index: 3;
+}
+
+.lcd-sub-telemetry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px dashed rgba(56, 189, 248, 0.25);
+  padding-top: 4px;
+  font-size: 0.62rem;
+  color: #64748b;
+  position: relative;
+  z-index: 3;
+}
+
+.lcd-telem-chip strong.text-green { color: #4ade80; text-shadow: 0 0 6px rgba(74, 222, 128, 0.4); }
+.lcd-telem-chip strong.text-cyan { color: #38bdf8; text-shadow: 0 0 6px rgba(56, 189, 248, 0.4); }
+.lcd-telem-chip strong.text-gold { color: #fbbf24; text-shadow: 0 0 6px rgba(251, 191, 36, 0.4); }
+
+/* =========================================================
+   2. MIDDLE CONSOLE SECTION: Centered Molded Tactile D-Pad Well
+   ========================================================= */
+.console-dpad-housing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 6px 0;
+  z-index: 5;
+}
+
+.dpad-housing-label {
+  font-size: 0.55rem;
+  letter-spacing: 2px;
+  color: #475569;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.dpad-well {
+  width: 196px;
+  height: 196px;
+  background: radial-gradient(circle at 45% 40%, #0c121e 0%, #030509 100%);
+  border-radius: 50%;
+  box-shadow: 
+    inset 0 6px 16px rgba(0, 0, 0, 0.95),
+    0 1px 0 rgba(255, 255, 255, 0.08),
+    0 4px 14px rgba(0, 0, 0, 0.7);
+  border: 2px solid #1a2538;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -528,8 +685,8 @@ html, body.controller-body {
 }
 
 .dpad-cross {
-  width: 140px;
-  height: 140px;
+  width: 148px;
+  height: 148px;
   position: relative;
   touch-action: none;
   user-select: none;
@@ -538,92 +695,121 @@ html, body.controller-body {
 
 .dpad-btn {
   position: absolute;
-  background: #171d2b;
-  border: 1px solid #2b354d;
+  background: linear-gradient(180deg, #1f293d 0%, #111726 100%);
+  border: 1px solid #2b3952;
   color: #94a3b8;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   touch-action: none;
-  transition: all 0.08s ease;
+  transition: all 0.06s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .dpad-btn.up {
   top: 0;
-  left: 46px;
-  width: 48px;
-  height: 48px;
-  border-radius: 8px 8px 0 0;
+  left: 49px;
+  width: 50px;
+  height: 50px;
+  border-radius: 10px 10px 0 0;
 }
 
 .dpad-btn.down {
   bottom: 0;
-  left: 46px;
-  width: 48px;
-  height: 48px;
-  border-radius: 0 0 8px 8px;
+  left: 49px;
+  width: 50px;
+  height: 50px;
+  border-radius: 0 0 10px 10px;
 }
 
 .dpad-btn.left {
-  top: 46px;
+  top: 49px;
   left: 0;
-  width: 48px;
-  height: 48px;
-  border-radius: 8px 0 0 8px;
+  width: 50px;
+  height: 50px;
+  border-radius: 10px 0 0 10px;
 }
 
 .dpad-btn.right {
-  top: 46px;
+  top: 49px;
   right: 0;
-  width: 48px;
-  height: 48px;
-  border-radius: 0 8px 8px 0;
+  width: 50px;
+  height: 50px;
+  border-radius: 0 10px 10px 0;
 }
 
 .dpad-center {
   position: absolute;
-  top: 46px;
-  left: 46px;
-  width: 48px;
-  height: 48px;
-  background: #131722;
+  top: 49px;
+  left: 49px;
+  width: 50px;
+  height: 50px;
+  background: radial-gradient(circle, #090e18 40%, #151d2c 100%);
+  border: 1px solid #1f2a3e;
+  border-radius: 50%;
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.8);
 }
 
 .dpad-btn.pressed, .dpad-btn:active {
   background: var(--ctrl-accent) !important;
   color: #050817 !important;
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
-  transform: scale(0.96);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7), 0 0 14px rgba(255, 200, 87, 0.6);
+  transform: scale(0.95);
 }
 
-/* Beveled Action Buttons A, B, C */
-.action-cluster {
-  width: 180px;
-  height: 180px;
-  position: relative;
+/* =========================================================
+   3. LOWER CONSOLE SECTION: Ergonomic Action Button Deck
+   ========================================================= */
+.console-action-housing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-top: auto;
+  z-index: 5;
+}
+
+.action-housing-label {
+  font-size: 0.55rem;
+  letter-spacing: 2px;
+  color: #475569;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.action-cluster-vertical {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  max-width: 380px;
+  padding: 4px 0 8px 0;
 }
 
 .button-well {
-  position: absolute;
-  width: 62px;
-  height: 62px;
+  position: relative;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
-  background: #080c14;
-  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.9);
-  padding: 3px;
-  border: 1px solid #1c2436;
+  background: radial-gradient(circle at 45% 40%, #0e1626 0%, #04060b 100%);
+  box-shadow: 
+    inset 0 4px 10px rgba(0, 0, 0, 0.95),
+    0 1px 0 rgba(255, 255, 255, 0.08),
+    0 3px 8px rgba(0, 0, 0, 0.6);
+  padding: 4px;
+  border: 2px solid #1c273c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-
-.btn-pos-a { bottom: 0; left: 16px; }
-.btn-pos-b { top: 12px; left: 58px; }
-.btn-pos-c { bottom: 0; right: 16px; }
 
 .action-cap {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -631,72 +817,117 @@ html, body.controller-body {
   justify-content: center;
   gap: 1px;
   font-weight: 900;
-  transition: transform 0.08s ease;
+  transition: transform 0.08s ease, filter 0.08s ease;
   touch-action: none;
 }
 
 .btn-a .action-cap {
   background: radial-gradient(circle at 35% 30%, var(--btn-a-red-light) 0%, var(--btn-a-red) 70%, #4c0519 100%);
   color: #ffffff;
-  box-shadow: 0 4px 10px rgba(225, 29, 72, 0.4);
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.4);
 }
 
 .btn-b .action-cap {
   background: radial-gradient(circle at 35% 30%, var(--btn-b-blue-light) 0%, var(--btn-b-blue) 70%, #082f49 100%);
   color: #ffffff;
-  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.4);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.4);
 }
 
 .btn-c .action-cap {
   background: radial-gradient(circle at 35% 30%, var(--btn-c-green-light) 0%, var(--btn-c-green) 70%, #022c22 100%);
   color: #ffffff;
-  box-shadow: 0 4px 10px rgba(5, 150, 105, 0.4);
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.4);
 }
 
 .action-label-letter {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   line-height: 1;
 }
 
 .action-sub-label {
-  font-size: 0.55rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.6px;
 }
 
 .action-cap.pressed, .action-cap:active {
   transform: scale(0.92);
+  filter: brightness(1.2);
 }
 
-/* Mode HUD in Mission View */
-.ctrl-mode-hud {
+/* Console Bottom Speaker & Model Stencil */
+.console-chassis-bottom {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 480px;
-  margin: 14px auto 0 auto;
-  background: rgba(11, 18, 48, 0.7);
-  border: 1px solid var(--ctrl-border);
-  border-radius: 8px;
-  padding: 8px 12px;
+  gap: 4px;
+  margin-top: 4px;
 }
 
-.controller-mode-pill {
-  font-size: 0.75rem;
-  font-weight: 800;
-  padding: 4px 10px;
-  border-radius: 4px;
-  letter-spacing: 1px;
+.chassis-speaker-vents {
+  display: flex;
+  gap: 5px;
+}
+.chassis-speaker-vents span {
+  display: block;
+  width: 14px;
+  height: 3px;
+  background: #141c2c;
+  border-radius: 2px;
+  box-shadow: inset 0 1px 1px #000;
 }
 
-.mode-drive { background: rgba(53, 208, 127, 0.15); border: 1px solid var(--ctrl-success); color: var(--ctrl-success); }
-.mode-photo { background: rgba(225, 29, 72, 0.2); border: 1px solid var(--btn-a-red); color: var(--btn-a-red-light); }
-.mode-sample { background: rgba(2, 132, 199, 0.2); border: 1px solid var(--btn-b-blue); color: var(--btn-b-blue-light); }
+.chassis-model-tag {
+  font-size: 0.54rem;
+  letter-spacing: 2px;
+  color: #334155;
+}
 
-.ctrl-lcd-msg {
-  font-size: 0.7rem;
-  color: var(--ctrl-text-dim);
+/* =========================================================
+   LANDSCAPE FALLBACK ADAPTABILITY
+   ========================================================= */
+@media (orientation: landscape) and (max-height: 520px) {
+  .controls-deck {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 10px 24px;
+  }
+  .console-dpad-housing {
+    order: 1;
+    width: auto;
+  }
+  .console-screen-housing {
+    order: 2;
+    max-width: 240px;
+    margin-bottom: 8px;
+  }
+  .console-action-housing {
+    order: 3;
+    width: auto;
+  }
+  .action-cluster-vertical {
+    gap: 12px;
+  }
+  .dpad-well {
+    width: 160px;
+    height: 160px;
+  }
+  .dpad-cross {
+    width: 124px;
+    height: 124px;
+  }
+  .dpad-btn {
+    width: 42px;
+    height: 42px;
+  }
+  .dpad-btn.up, .dpad-btn.down { left: 41px; }
+  .dpad-btn.left, .dpad-btn.right { top: 41px; }
+  .dpad-center { top: 41px; left: 41px; width: 42px; height: 42px; }
+  .button-well {
+    width: 58px;
+    height: 58px;
+  }
 }
 
 /* Spectator Deck */

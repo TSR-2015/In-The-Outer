@@ -133,10 +133,36 @@
 
     <!-- VIEW 3: MISSION CONTROL VIEW (Registered Per Mission: Mars Rover D-Pad + Actions) -->
     <section id="view-mission" class="ctrl-view">
-      <!-- Active Driver Gamepad Deck -->
-      <div id="driver-gamepad-deck" class="controls-deck">
-        <div class="gamepad-split">
-          <!-- LEFT THUMB REST: MOLDED TACTILE D-PAD -->
+      <!-- Active Driver Gamepad Deck: True Handheld Console Form Factor -->
+      <div id="driver-gamepad-deck" class="controls-deck handheld-console">
+        <!-- Molded Hardware Screws & Side Grips -->
+        <div class="chassis-screw screw-tl">+</div>
+        <div class="chassis-screw screw-tr">+</div>
+        <div class="chassis-screw screw-bl">+</div>
+        <div class="chassis-screw screw-br">+</div>
+        <div class="chassis-grip grip-left"></div>
+        <div class="chassis-grip grip-right"></div>
+
+        <!-- 1. TOP SECTION: Molded CRT / LCD Telemetry Display Screen -->
+        <div class="console-screen-housing">
+          <div class="lcd-bezel">
+            <div class="lcd-scanlines"></div>
+            <div class="lcd-header-bar">
+              <span class="lcd-title font-mono">[ TELEMETRY LINK // SOL-142 ]</span>
+              <div id="controller-mode-pill" class="controller-mode-pill mode-drive font-mono">DRIVE</div>
+            </div>
+            <div id="lcd-status-msg" class="ctrl-lcd-msg font-mono">WATCH BIG SCREEN FOR ROVER POSITION</div>
+            <div class="lcd-sub-telemetry font-mono">
+              <span class="lcd-telem-chip">PWR: <strong class="text-green">98%</strong></span>
+              <span class="lcd-telem-chip">SIG: <strong class="text-cyan">LIVE</strong></span>
+              <span class="lcd-telem-chip">COMMS: <strong class="text-gold">AIRCONSOLE</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. MIDDLE SECTION: Centered Tactile Molded D-Pad Well -->
+        <div class="console-dpad-housing">
+          <div class="dpad-housing-label font-mono">DIRECTIONAL MATRIX</div>
           <div class="dpad-well">
             <div class="dpad-cross" id="dpad-cross">
               <button class="dpad-btn up" id="dpad-up" data-dir="up" aria-label="Up">
@@ -154,42 +180,47 @@
               <div class="dpad-center"></div>
             </div>
           </div>
+        </div>
 
-          <!-- RIGHT THUMB REST: BEVELED ACTION BUTTONS A, B, C -->
-          <div class="action-cluster">
+        <!-- 3. LOWER SECTION: Ergonomic Action Button Deck (A, B, C) -->
+        <div class="console-action-housing">
+          <div class="action-housing-label font-mono">MISSION ACTIONS</div>
+          <div class="action-cluster-vertical">
             <!-- Button A: Photo Mode -->
-            <div class="button-well btn-pos-a btn-a" id="well-a">
+            <div class="button-well btn-a" id="well-a">
               <button class="action-cap" id="btn-action-a" data-action="photo" aria-label="Button A Photo">
                 <span class="action-label-letter">A</span>
-                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                <svg class="ui-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
                 <span class="action-sub-label">PHOTO</span>
               </button>
             </div>
 
             <!-- Button B: Sample Mode -->
-            <div class="button-well btn-pos-b btn-b" id="well-b">
+            <div class="button-well btn-b" id="well-b">
               <button class="action-cap" id="btn-action-b" data-action="sample" aria-label="Button B Sample">
                 <span class="action-label-letter">B</span>
-                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31L4.67 18.2A2 2 0 0 0 6.4 21h11.2a2 2 0 0 0 1.73-2.8L14 9.31V2"/><line x1="8.5" x2="15.5" y1="2" y2="2"/></svg>
+                <svg class="ui-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31L4.67 18.2A2 2 0 0 0 6.4 21h11.2a2 2 0 0 0 1.73-2.8L14 9.31V2"/><line x1="8.5" x2="15.5" y1="2" y2="2"/></svg>
                 <span class="action-sub-label">SAMPLE</span>
               </button>
             </div>
 
             <!-- Button C: Enter / Confirm Action -->
-            <div class="button-well btn-pos-c btn-c" id="well-c">
+            <div class="button-well btn-c" id="well-c">
               <button class="action-cap" id="btn-action-c" data-action="confirm" aria-label="Button C Action">
                 <span class="action-label-letter">C</span>
-                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                <svg class="ui-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
                 <span class="action-sub-label">ACTION</span>
               </button>
             </div>
           </div>
-        </div>
 
-        <!-- Mode Pill & Live HUD Bar -->
-        <div class="ctrl-mode-hud">
-          <div id="controller-mode-pill" class="controller-mode-pill mode-drive font-mono">DRIVE</div>
-          <div id="lcd-status-msg" class="ctrl-lcd-msg font-mono">WATCH BIG SCREEN FOR ROVER POSITION</div>
+          <!-- Bottom Speaker Slits & Regulatory Stencil -->
+          <div class="console-chassis-bottom">
+            <div class="chassis-speaker-vents">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="chassis-model-tag font-mono">ITO // RECON VEHICLE CONTROLLER</div>
+          </div>
         </div>
       </div>
 

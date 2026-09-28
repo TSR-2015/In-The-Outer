@@ -844,18 +844,26 @@ body, html {
 /* MISSION PROGRESS SCREEN & CARDS STYLING    */
 /* ----------------------------------------- */
 .progress-screen-container {
-  max-width: 600px;
-  width: 90%;
-  padding: 30px;
+  max-width: 780px;
+  width: 92%;
+  padding: 32px 36px;
   display: flex;
   flex-direction: column;
+  background: rgba(10, 15, 28, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
 }
 
 .overall-progress-section {
-  background: var(--bg-panel-light);
-  border: var(--border-thin);
-  padding: 15px;
-  margin-bottom: 20px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
 }
 
 .overall-labels {
@@ -864,13 +872,14 @@ body, html {
   font-weight: 700;
   font-size: 0.9rem;
   margin-bottom: 8px;
+  color: #e2e8f0;
 }
 
 .completed-missions-count {
   margin-top: 8px;
   font-size: 0.8rem;
   text-align: right;
-  color: var(--color-muted-grey);
+  color: #94a3b8;
 }
 
 .mission-cards-list {
@@ -886,25 +895,33 @@ body, html {
 .mission-card {
   display: flex;
   flex-direction: column;
-  border: 2px solid var(--color-black);
-  background: var(--bg-panel);
-  padding: 20px;
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(10, 15, 28, 0.95) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 12px;
+  padding: 18px 22px;
   min-height: 110px;
   cursor: pointer;
-  box-shadow: 4px 4px 0px rgba(0, 0, 0, 1);
-  transition: var(--transition-smooth);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
 }
 
 .mission-card:hover:not(.locked) {
   transform: translateY(-2px);
-  box-shadow: 6px 6px 0px rgba(0, 0, 0, 1);
-  background: var(--bg-panel-light);
+  border-color: #38bdf8;
+  background: linear-gradient(135deg, rgba(22, 33, 58, 0.9) 0%, rgba(15, 23, 42, 0.98) 100%);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.75), 0 0 20px rgba(56, 189, 248, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .mission-card.locked {
-  opacity: 0.45;
+  opacity: 0.5;
   cursor: not-allowed;
-  background: #f1f1f1;
+  border-color: #334155;
+  background: rgba(15, 23, 42, 0.4);
+  box-shadow: none;
 }
 
 .mission-card-header {
@@ -912,33 +929,40 @@ body, html {
   justify-content: space-between;
   align-items: center;
   font-family: var(--font-mono);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  border-bottom: var(--border-light);
-  padding-bottom: 6px;
-  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.mission-card-index {
+  color: #38bdf8;
+  letter-spacing: 1.5px;
+  font-weight: 800;
 }
 
 .mission-card-title {
   text-transform: uppercase;
-}
-
-.mission-card-status {
-  text-transform: uppercase;
-  font-size: 0.8rem;
+  color: #ffffff;
+  font-size: 1.05rem;
+  letter-spacing: 0.5px;
 }
 
 .mission-card-stats-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
-  font-size: 0.75rem;
-  color: var(--color-muted-grey);
+  gap: 18px;
+  font-size: 0.78rem;
+  color: #94a3b8;
   font-family: var(--font-mono);
+  align-items: center;
 }
 
 .mission-card-stats-row span {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .progress-footer {
@@ -2999,6 +3023,51 @@ body:has(#mars-hud:not(.hidden)) #audio-toggle {
 .rank-2nd {
   background: #64748b;
   color: #fff;
+}
+
+/* Split-Screen & Compact Viewport Top Bar Non-Overlapping Alignment */
+.split-active .mars-top-command-bar {
+  gap: 8px;
+  padding: 6px 10px;
+}
+.split-active .mars-identity-pod {
+  min-width: 0;
+  gap: 8px;
+}
+.split-active .p-hud-avatar {
+  width: 30px;
+  height: 30px;
+  font-size: 0.8rem;
+}
+.split-active .p-hud-name {
+  font-size: 0.85rem;
+}
+.split-active .p-hud-rover-tag {
+  font-size: 0.58rem;
+}
+.split-active .mars-telemetry-chips {
+  gap: 6px;
+  padding: 4px 8px;
+}
+.split-active .mars-telem-chip {
+  padding: 0 4px;
+}
+.split-active .mars-telem-chip .chip-label {
+  font-size: 0.52rem;
+}
+.split-active .mars-telem-chip .chip-val {
+  font-size: 0.74rem;
+}
+.split-active .mars-score-pod {
+  min-width: 0;
+  gap: 8px;
+}
+.split-active .p-hud-score-val {
+  font-size: 1.05rem;
+}
+.split-active .p-hud-rank-badge {
+  font-size: 0.58rem;
+  padding: 2px 6px;
 }
 
 /* Minimap Panel */

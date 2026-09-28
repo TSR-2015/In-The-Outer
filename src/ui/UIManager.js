@@ -129,6 +129,7 @@ class UIManager {
     const landing = document.getElementById('landing-page');
     if (!landing) return;
     const layers = landing.querySelectorAll('.parallax-layer');
+    const cards = landing.querySelectorAll('.mode-select-btn');
     if (!layers || layers.length === 0) return;
 
     window.addEventListener('mousemove', (e) => {
@@ -140,11 +141,30 @@ class UIManager {
 
       layers.forEach(layer => {
         const speed = parseFloat(layer.getAttribute('data-speed')) || 0.05;
-        const x = -dx * speed * 60;
-        const y = -dy * speed * 60;
+        const x = -dx * speed * 70;
+        const y = -dy * speed * 70;
         layer.style.transform = `translate3d(${x}px, ${y}px, 0)`;
       });
+
+      if (cards && cards.length > 0) {
+        cards.forEach(card => {
+          const tiltX = -dy * 5;
+          const tiltY = dx * 5;
+          card.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translateY(-2px)`;
+        });
+      }
     }, { passive: true });
+
+    landing.addEventListener('mouseleave', () => {
+      layers.forEach(layer => {
+        layer.style.transform = 'translate3d(0, 0, 0)';
+      });
+      if (cards && cards.length > 0) {
+        cards.forEach(card => {
+          card.style.transform = '';
+        });
+      }
+    });
   }
 
   toggleModal(id, show) {

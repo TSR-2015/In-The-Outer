@@ -6,6 +6,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = resolve(__filename, '..');
 
 export default defineConfig({
+  server: {
+    watch: {
+      ignored: ['**/.agents/**', '**/data/**', '**/scripts/**', '**/.git/**']
+    }
+  },
   build: {
     rollupOptions: {
       input: {

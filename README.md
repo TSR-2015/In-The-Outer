@@ -84,10 +84,45 @@ Run the automated 17-point multiplayer integration test suite:
 node scripts/test_multiplayer.js
 ```
 
+Run the AirConsole architecture test suite:
+```bash
+node scripts/test_airconsole.js
+```
+
 Verify build output:
 ```bash
 npm run build
 ```
+
+---
+
+## Production Deployment Guide
+
+### Option A: All-in-One Deployment (Render / Railway / DigitalOcean / Fly.io)
+Deploy the repository as a Node.js web service:
+- **Build Command**: `npm run build`
+- **Start Command**: `npm start` (runs `node server.js`)
+- The server automatically detects the pre-built `dist/` folder in production, serves static assets with high performance, and handles WebSocket connections at `/ws`.
+
+### Option B: Split Frontend + Backend (Vercel + Render)
+1. **Backend (Render / Railway)**:
+   - Create a Web Service connected to this repository.
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+   - Set environment variables:
+     - `PORT`: (provided automatically by host)
+     - `FRONTEND_URL`: `https://your-game.vercel.app`
+     - `NODE_ENV`: `production`
+
+2. **Frontend (Vercel)**:
+   - Create a new project importing this repository.
+   - Framework preset: **Vite**
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+   - Set environment variables:
+     - `VITE_WS_URL`: `wss://your-backend.onrender.com/ws`
+     - `VITE_FRONTEND_URL`: `https://your-game.vercel.app`
+   - Multi-page rewrites are already configured in `vercel.json` (`/controller` -> `controller.html`).
 
 ---
 

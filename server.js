@@ -13,46 +13,69 @@ const __dirname = path.dirname(__filename);
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data', 'users.json');
 
-// Ensure data directory exists
-if (!fs.existsSync(path.join(__dirname, 'data'))) {
-  fs.mkdirSync(path.join(__dirname, 'data'), { recursive: true });
-}
-if (!fs.existsSync(DATA_FILE)) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify({ users: [] }, null, 2));
+// In-Memory User Store with safe filesystem fallback for cloud/ephemeral containers
+let usersCache = [];
+
+function initUserStorage() {
+  try {
+    const dataDir = path.join(__dirname, 'data');
+    if (!fs.existsSync(dataDir)) {
+      try {
+        fs.mkdirSync(dataDir, { recursive: true });
+      } catch (err) {
+        console.warn('[Database] Read-only or restricted filesystem; running with in-memory user store.');
+      }
+    }
+    if (fs.existsSync(DATA_FILE)) {
+      const raw = fs.readFileSync(DATA_FILE, 'utf-8');
+      const parsed = JSON.parse(raw);
+      usersCache = Array.isArray(parsed.users) ? parsed.users : [];
+    } else {
+      try {
+        fs.writeFileSync(DATA_FILE, JSON.stringify({ users: [] }, null, 2));
+      } catch (err) {
+        // Read-only filesystem safe
+      }
+    }
+  } catch (err) {
+    console.warn('[Database] Failed to initialize file storage, falling back to memory:', err.message);
+    usersCache = [];
+  }
 }
 
-// User Storage Helpers
+initUserStorage();
+
 function loadUsers() {
-  try {
-    const raw = fs.readFileSync(DATA_FILE, 'utf-8');
-    const parsed = JSON.parse(raw);
-    return parsed.users || [];
-  } catch (err) {
-    console.error('[Database] Failed to read users.json:', err);
-    return [];
-  }
+  return usersCache;
 }
 
 function saveUser(userData) {
   try {
-    const users = loadUsers();
-    const existingIndex = users.findIndex(u => u.id === userData.id || (userData.name && u.name.toUpperCase() === userData.name.toUpperCase()));
+    const existingIndex = usersCache.findIndex(u => u.id === userData.id || (userData.name && u.name.toUpperCase() === userData.name.toUpperCase()));
     
     let savedUser = null;
     if (existingIndex >= 0) {
-      users[existingIndex].lastSeen = new Date().toISOString();
-      if (userData.name) users[existingIndex].name = userData.name.toUpperCase();
-      savedUser = users[existingIndex];
+      usersCache[existingIndex].lastSeen = new Date().toISOString();
+      if (userData.name) usersCache[existingIndex].name = userData.name.toUpperCase().trim().slice(0, 24);
+      savedUser = usersCache[existingIndex];
     } else {
       savedUser = {
         id: userData.id || `usr_${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 4)}`,
-        name: (userData.name || 'PILOT').toUpperCase(),
+        name: (userData.name || 'PILOT').toUpperCase().trim().slice(0, 24),
         createdAt: new Date().toISOString(),
         lastSeen: new Date().toISOString()
       };
-      users.push(savedUser);
+      usersCache.push(savedUser);
     }
-    fs.writeFileSync(DATA_FILE, JSON.stringify({ users }, null, 2));
+
+    try {
+      if (fs.existsSync(path.dirname(DATA_FILE))) {
+        fs.writeFileSync(DATA_FILE, JSON.stringify({ users: usersCache }, null, 2));
+      }
+    } catch (writeErr) {
+      // Ephemeral or read-only container fallback
+    }
+
     return savedUser;
   } catch (err) {
     console.error('[Database] Failed to save user:', err);
@@ -102,7 +125,20 @@ function getLocalIpAddress() {
 async function startServer() {
   const app = express();
   const server = http.createServer(app);
-  const wss = new WebSocketServer({ noServer: true });
+  const wss = new WebSocketServer({ noServer: true, maxPayload: 64 * 1024 });
+
+  // Cross-Origin Resource Sharing (CORS) Middleware
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    const allowedOrigin = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, '') : '*';
+    res.setHeader('Access-Control-Allow-Origin', allowedOrigin === '*' ? '*' : (origin || allowedOrigin));
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(204);
+    }
+    next();
+  });
 
   app.use(express.json());
 
@@ -117,57 +153,78 @@ async function startServer() {
   });
 
   app.get('/api/server-info', (req, res) => {
+    const frontendBase = process.env.FRONTEND_URL
+      ? process.env.FRONTEND_URL.replace(/\/$/, '')
+      : `http://${getLocalIpAddress()}:${PORT}`;
     res.json({
       localIp: getLocalIpAddress(),
       port: PORT,
-      controllerUrl: `http://${getLocalIpAddress()}:${PORT}/controller`
+      controllerUrl: `${frontendBase}/controller`
     });
   });
 
-  // Setup Vite development middleware
-  const vite = await createViteServer({
-    server: { middlewareMode: true },
-    appType: 'custom'
-  });
+  // Client Serving: Production Static vs Development Vite Middleware
+  const distDir = path.join(__dirname, 'dist');
+  const isProd = process.env.NODE_ENV === 'production' || (!process.env.VITE_DEV && fs.existsSync(path.join(distDir, 'index.html')));
 
-  // Serve controller page
-  app.get(['/controller', '/controller.html'], async (req, res, next) => {
-    try {
-      const controllerPath = path.join(__dirname, 'controller.html');
-      if (!fs.existsSync(controllerPath)) {
-        return res.status(404).send('controller.html not found');
+  if (isProd && fs.existsSync(distDir)) {
+    console.log('[Server] Production Mode: Serving pre-built static client assets from /dist');
+    app.use(express.static(distDir));
+
+    app.get(['/controller', '/controller.html'], (req, res) => {
+      res.sendFile(path.join(distDir, 'controller.html'));
+    });
+
+    app.use((req, res) => {
+      res.sendFile(path.join(distDir, 'index.html'));
+    });
+  } else {
+    console.log('[Server] Development Mode: Serving with Vite on-the-fly middleware');
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: 'custom'
+    });
+
+    app.get(['/controller', '/controller.html'], async (req, res, next) => {
+      try {
+        const controllerPath = path.join(__dirname, 'controller.html');
+        if (!fs.existsSync(controllerPath)) {
+          return res.status(404).send('controller.html not found');
+        }
+        let html = fs.readFileSync(controllerPath, 'utf-8');
+        html = await vite.transformIndexHtml(req.url, html);
+        res.status(200).set({ 'Content-Type': 'text/html' }).send(html);
+      } catch (e) {
+        next(e);
       }
-      let html = fs.readFileSync(controllerPath, 'utf-8');
-      html = await vite.transformIndexHtml(req.url, html);
-      res.status(200).set({ 'Content-Type': 'text/html' }).send(html);
-    } catch (e) {
-      next(e);
-    }
-  });
+    });
 
-  // Serve big screen index page
-  app.get('/', async (req, res, next) => {
-    try {
-      const indexPath = path.join(__dirname, 'index.html');
-      let html = fs.readFileSync(indexPath, 'utf-8');
-      html = await vite.transformIndexHtml(req.url, html);
-      res.status(200).set({ 'Content-Type': 'text/html' }).send(html);
-    } catch (e) {
-      next(e);
-    }
-  });
+    app.get('/', async (req, res, next) => {
+      try {
+        const indexPath = path.join(__dirname, 'index.html');
+        let html = fs.readFileSync(indexPath, 'utf-8');
+        html = await vite.transformIndexHtml(req.url, html);
+        res.status(200).set({ 'Content-Type': 'text/html' }).send(html);
+      } catch (e) {
+        next(e);
+      }
+    });
 
-  // Use Vite middlewares for all static modules and assets
-  app.use(vite.middlewares);
+    app.use(vite.middlewares);
+  }
 
   // Upgrade HTTP connections to WebSocket
   server.on('upgrade', (request, socket, head) => {
-    const { pathname } = new URL(request.url, `http://${request.headers.host}`);
-    if (pathname === '/ws') {
-      wss.handleUpgrade(request, socket, head, (ws) => {
-        wss.emit('connection', ws, request);
-      });
-    } else {
+    try {
+      const { pathname } = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
+      if (pathname === '/ws') {
+        wss.handleUpgrade(request, socket, head, (ws) => {
+          wss.emit('connection', ws, request);
+        });
+      } else {
+        socket.destroy();
+      }
+    } catch (err) {
       socket.destroy();
     }
   });
@@ -237,6 +294,16 @@ async function startServer() {
   }
 
   function handleWebSocketMessage(ws, msg) {
+    if (!msg || typeof msg !== 'object' || typeof msg.type !== 'string') {
+      return;
+    }
+
+    // Application-Level Keepalive Heartbeat
+    if (msg.type === 'PING') {
+      sendToSocket(ws, { type: 'PONG', timestamp: Date.now() });
+      return;
+    }
+
     const { type, roomId, playerId, payload = {} } = msg;
 
     switch (type) {
@@ -261,11 +328,14 @@ async function startServer() {
         ws.isBigScreen = true;
 
         console.log(`[Room Created]: Code ${newCode}`);
+        const frontendBase = process.env.FRONTEND_URL
+          ? process.env.FRONTEND_URL.replace(/\/$/, '')
+          : `http://${getLocalIpAddress()}:${PORT}`;
         sendToSocket(ws, {
           type: 'ROOM_CREATED',
           roomId: newCode,
           localIp: getLocalIpAddress(),
-          controllerUrl: `http://${getLocalIpAddress()}:${PORT}/controller?room=${newCode}`
+          controllerUrl: `${frontendBase}/controller?room=${newCode}`
         });
         break;
       }
@@ -485,6 +555,17 @@ async function startServer() {
       case 'SET_CONTROLLERS_VIEW': {
         const room = rooms[roomId];
         if (!room) return;
+
+        // Verify Host if sent by a controller socket
+        if (playerId && !ws.isBigScreen && playerId !== room.masterPlayerId) {
+          sendToSocket(ws, {
+            type: 'ERROR',
+            code: 'UNAUTHORIZED_HOST',
+            message: 'Only the Host can switch controllers view.'
+          });
+          return;
+        }
+
         const targetView = payload.view || msg.view || 'LOBBY';
         const missionId = payload.missionId || msg.missionId || null;
 
@@ -594,6 +675,9 @@ async function startServer() {
         const player = room.players.find(p => p.id === playerId);
         if (!player) return;
 
+        const validDirections = ['up', 'down', 'left', 'right', 'boost', 'brake'];
+        if (!payload.direction || !validDirections.includes(payload.direction)) return;
+
         // Forward input directly to Big Screen
         if (room.bigScreenWs && room.bigScreenWs.readyState === WebSocket.OPEN) {
           sendToSocket(room.bigScreenWs, {
@@ -631,12 +715,20 @@ async function startServer() {
         const player = room.players.find(p => p.id === playerId);
         if (!player) return;
 
+        const rawKeys = payload.keys || {};
+        const sanitizedKeys = {};
+        ['up', 'down', 'left', 'right', 'boost', 'brake'].forEach(dir => {
+          if (typeof rawKeys[dir] === 'boolean') {
+            sanitizedKeys[dir] = rawKeys[dir];
+          }
+        });
+
         if (room.bigScreenWs && room.bigScreenWs.readyState === WebSocket.OPEN) {
           sendToSocket(room.bigScreenWs, {
             type: 'ROVER_MOVE_STATE',
             playerNumber: player.playerNumber,
             playerId: player.id,
-            keys: payload.keys || {}
+            keys: sanitizedKeys
           });
         }
         break;
@@ -1020,8 +1112,28 @@ async function startServer() {
     console.log(`  WebSocket Endpoint: ws://<host>:${PORT}/ws`);
     console.log(`======================================================\n`);
   });
+
+  const shutdown = () => {
+    console.log('\n[Server] Graceful shutdown initiated. Closing WebSocket & HTTP servers...');
+    clearInterval(pingInterval);
+    wss.clients.forEach((client) => {
+      try {
+        client.close(1001, 'Server shutting down');
+      } catch (e) {}
+    });
+    wss.close(() => {
+      server.close(() => {
+        console.log('[Server] Shutdown complete.');
+        process.exit(0);
+      });
+    });
+  };
+
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
 }
 
 startServer().catch(err => {
   console.error('[Server] Fatal startup error:', err);
 });
+

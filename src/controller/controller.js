@@ -34,6 +34,9 @@ class PhoneController {
     this.dpadPointerId = null;
     this.dpadStreamTimer = null;
     this.pauseDebounce = false;
+    this.reconnectAttempts = 0;
+    this.reconnectTimer = null;
+    this.heartbeatTimer = null;
 
     // DOM Elements Cache
     this.els = {};
@@ -248,24 +251,50 @@ class PhoneController {
   // =========================================================
   // WEBSOCKET LINK & DISPATCH
   // =========================================================
+  getWebSocketUrl() {
+    const envWs = import.meta.env.VITE_WS_URL;
+    if (envWs && typeof envWs === 'string' && envWs.trim().length > 0) {
+      const clean = envWs.trim();
+      if (clean.startsWith('ws://') || clean.startsWith('wss://')) {
+        return clean.endsWith('/ws') ? clean : `${clean.replace(/\/$/, '')}/ws`;
+      }
+      if (clean.startsWith('http://') || clean.startsWith('https://')) {
+        const converted = clean.replace(/^http/, 'ws');
+        return converted.endsWith('/ws') ? converted : `${converted.replace(/\/$/, '')}/ws`;
+      }
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      return `${protocol}//${clean.replace(/\/$/, '')}/ws`;
+    }
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${protocol}//${window.location.host}/ws`;
+  }
+
   connectToRoom(roomId, playerName) {
-    this.roomId = roomId.toUpperCase().trim();
-    this.playerName = playerName.toUpperCase().trim();
+    this.roomId = (roomId || '').toUpperCase().trim();
+    this.playerName = (playerName || '').toUpperCase().trim();
+
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
 
     this.setConnectionIndicator('CONNECTING');
     if (this.els.authErrorMsg) this.els.authErrorMsg.textContent = 'CONNECTING TO MISSION LINK...';
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const wsUrl = this.getWebSocketUrl();
 
     if (this.ws) {
-      this.ws.close();
+      try {
+        this.ws.close();
+      } catch (e) {}
     }
 
     this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {
-      console.log('[AirConsole Controller] WebSocket connected.');
+      console.log('[AirConsole Controller] WebSocket connected:', wsUrl);
+      this.reconnectAttempts = 0;
+      this.startHeartbeat();
       this.setConnectionIndicator('ONLINE');
 
       // Send join request with initial state payload
@@ -283,6 +312,7 @@ class PhoneController {
     this.ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
+        if (msg.type === 'PONG') return;
         this.handleMessage(msg);
       } catch (err) {
         console.error('[AirConsole Controller] Parse error:', err);
@@ -290,23 +320,42 @@ class PhoneController {
     };
 
     this.ws.onclose = () => {
-      console.warn('[AirConsole Controller] WebSocket disconnected. Auto-reconnecting in 2s...');
+      this.stopHeartbeat();
+      const delay = Math.min(1000 * Math.pow(1.5, this.reconnectAttempts), 10000);
+      this.reconnectAttempts++;
+      console.warn(`[AirConsole Controller] WebSocket disconnected. Auto-reconnecting in ${(delay / 1000).toFixed(1)}s...`);
       this.setConnectionIndicator('OFFLINE');
       this.state.connected = false;
       this.renderFromState();
 
-      // Graceful auto-reconnect
-      setTimeout(() => {
+      // Graceful auto-reconnect with exponential backoff
+      this.reconnectTimer = setTimeout(() => {
         if (this.roomId && this.playerName) {
           this.connectToRoom(this.roomId, this.playerName);
         }
-      }, 2000);
+      }, delay);
     };
 
     this.ws.onerror = (err) => {
       console.error('[AirConsole Controller] Socket error:', err);
       if (this.els.authErrorMsg) this.els.authErrorMsg.textContent = 'Connection error. Check room code.';
     };
+  }
+
+  startHeartbeat() {
+    this.stopHeartbeat();
+    this.heartbeatTimer = setInterval(() => {
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        this.send({ type: 'PING' });
+      }
+    }, 20000);
+  }
+
+  stopHeartbeat() {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
   }
 
   send(data) {

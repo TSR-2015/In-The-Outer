@@ -33,27 +33,67 @@ class MultiplayerManager {
 
     this.onRoomReady = null;
     this.onPlayersUpdated = null;
+    this.reconnectAttempts = 0;
+    this.reconnectTimer = null;
+    this.heartbeatTimer = null;
   }
 
   init() {
     this.connectWebSocket();
   }
 
-  connectWebSocket() {
+  getWebSocketUrl() {
+    const envWs = import.meta.env.VITE_WS_URL;
+    if (envWs && typeof envWs === 'string' && envWs.trim().length > 0) {
+      const clean = envWs.trim();
+      if (clean.startsWith('ws://') || clean.startsWith('wss://')) {
+        return clean.endsWith('/ws') ? clean : `${clean.replace(/\/$/, '')}/ws`;
+      }
+      if (clean.startsWith('http://') || clean.startsWith('https://')) {
+        const converted = clean.replace(/^http/, 'ws');
+        return converted.endsWith('/ws') ? converted : `${converted.replace(/\/$/, '')}/ws`;
+      }
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      return `${protocol}//${clean.replace(/\/$/, '')}/ws`;
+    }
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    return `${protocol}//${window.location.host}/ws`;
+  }
+
+  connectWebSocket() {
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+
+    const wsUrl = this.getWebSocketUrl();
+
+    if (this.ws) {
+      try {
+        this.ws.close();
+      } catch (e) {}
+    }
 
     this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {
-      console.log('[MultiplayerManager] Connected to backend WebSocket.');
-      // Request room creation
-      this.send({ type: 'ROOM_CREATE' });
+      console.log('[MultiplayerManager] Connected to backend WebSocket:', wsUrl);
+      this.reconnectAttempts = 0;
+      this.startHeartbeat();
+
+      if (this.roomId) {
+        // Reconnect to existing room on reconnect
+        this.send({ type: 'ROOM_RECONNECT', roomId: this.roomId });
+      } else {
+        // Request room creation
+        this.send({ type: 'ROOM_CREATE' });
+      }
     };
 
     this.ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
+        if (msg.type === 'PONG') return;
         this.handleMessage(msg);
       } catch (err) {
         console.error('[MultiplayerManager] Message parse error:', err);
@@ -61,13 +101,32 @@ class MultiplayerManager {
     };
 
     this.ws.onclose = () => {
-      console.warn('[MultiplayerManager] WebSocket disconnected. Retrying in 3s...');
-      setTimeout(() => this.connectWebSocket(), 3000);
+      this.stopHeartbeat();
+      const delay = Math.min(1000 * Math.pow(1.5, this.reconnectAttempts), 10000);
+      this.reconnectAttempts++;
+      console.warn(`[MultiplayerManager] WebSocket disconnected. Retrying in ${(delay / 1000).toFixed(1)}s...`);
+      this.reconnectTimer = setTimeout(() => this.connectWebSocket(), delay);
     };
 
     this.ws.onerror = (err) => {
       console.error('[MultiplayerManager] WebSocket error:', err);
     };
+  }
+
+  startHeartbeat() {
+    this.stopHeartbeat();
+    this.heartbeatTimer = setInterval(() => {
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        this.send({ type: 'PING' });
+      }
+    }, 20000);
+  }
+
+  stopHeartbeat() {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
   }
 
   send(data) {
@@ -82,8 +141,16 @@ class MultiplayerManager {
     switch (type) {
       case 'ROOM_CREATED': {
         this.roomId = roomId;
-        this.controllerUrl = msg.controllerUrl;
-        console.log(`[MultiplayerManager] Room Active: Code ${roomId}`);
+        // Prioritize explicit frontend URL or current web host origin (when not on localhost)
+        const envFrontend = import.meta.env.VITE_FRONTEND_URL;
+        const isHostedDomain = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        const baseOrigin = envFrontend || (isHostedDomain ? window.location.origin : null);
+
+        this.controllerUrl = baseOrigin
+          ? `${baseOrigin.replace(/\/$/, '')}/controller?room=${roomId}`
+          : (msg.controllerUrl || `${window.location.origin}/controller?room=${roomId}`);
+
+        console.log(`[MultiplayerManager] Room Active: Code ${roomId}, Controller URL: ${this.controllerUrl}`);
         this.updateLobbyUI();
         if (this.onRoomReady) this.onRoomReady(roomId, this.controllerUrl);
         break;

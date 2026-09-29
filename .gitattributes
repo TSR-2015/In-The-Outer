@@ -4,3 +4,8 @@
 *.jpg filter=lfs diff=lfs merge=lfs -text
 *.jpeg filter=lfs diff=lfs merge=lfs -text
 *.hdr filter=lfs diff=lfs merge=lfs -text
+public/models/mission1/solar_orbiter.glb filter=lfs diff=lfs merge=lfs -text
+public/models/mission1/satellite.glb filter=lfs diff=lfs merge=lfs -text
+public/models/mission2/Station.glb filter=lfs diff=lfs merge=lfs -text
+public/models/mission2/Earth.glb filter=lfs diff=lfs merge=lfs -text
+

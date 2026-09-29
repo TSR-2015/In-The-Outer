@@ -17,6 +17,10 @@
   <!-- TOP PERSISTENT STATUS STRIP (AirConsole: non-competing fixed status) -->
   <header class="ctrl-top-strip">
     <div class="ctrl-strip-left">
+      <button id="btn-ctrl-back-to-lobby" class="ctrl-back-btn hidden" title="Back to Lobby" aria-label="Back to Lobby">
+        <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        <span class="font-mono" style="font-size: 0.72rem; font-weight: 700; letter-spacing: 1px;">BACK</span>
+      </button>
       <div id="player-avatar" class="ctrl-avatar">--</div>
       <div class="ctrl-meta">
         <div class="ctrl-player-line">
@@ -99,21 +103,21 @@
         </div>
 
         <div class="ctrl-lobby-actions">
-          <!-- Ready Toggle Button -->
+          <!-- Ready Toggle Button (For Player 2) -->
           <button id="btn-toggle-ready" class="game-btn btn-secondary btn-lg ctrl-btn-block font-mono">
             <span id="ready-toggle-icon">
               <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             </span>
-            <span id="ready-toggle-text">SET READY</span>
+            <span id="ready-toggle-text">READY</span>
           </button>
 
-          <!-- Host-Only Controls -->
+          <!-- Host-Only Controls: START ROVER MISSION -->
           <div id="host-controls-block" class="ctrl-host-controls hidden">
             <div class="ctrl-host-label font-mono">HOST MISSION LAUNCHER</div>
             <div class="ctrl-host-mission-picker">
               <button id="btn-host-launch-mars" class="game-btn btn-primary ctrl-btn-block">
                 <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                START MARS ROVER MISSION
+                START ROVER MISSION
               </button>
               <div class="ctrl-host-sub-actions">
                 <button id="btn-host-nav-missions" class="game-btn btn-outline btn-sm">MISSIONS CONSOLE</button>
@@ -122,10 +126,10 @@
             </div>
           </div>
 
-          <!-- Non-Host Waiting Banner -->
+          <!-- Non-Host Waiting Banner (Player 2: Waiting for Host) -->
           <div id="non-host-waiting-block" class="ctrl-waiting-banner">
             <div class="ctrl-spinner-dot"></div>
-            <span>WAITING FOR HOST TO START MISSION...</span>
+            <span id="non-host-waiting-text">Waiting for Host to start the Rover Mission...</span>
           </div>
         </div>
       </div>

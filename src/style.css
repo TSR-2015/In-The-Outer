@@ -2506,12 +2506,24 @@ body:has(#mars-hud:not(.hidden)) #audio-toggle {
    ========================================================= */
 #lobby-screen {
   background: radial-gradient(circle at 50% 50%, #0d1420 0%, #03060a 100%);
-  z-index: 50;
+  z-index: 100;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  justify-content: flex-start !important;
+  padding: 40px 16px 80px 16px;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+#lobby-screen.active {
+  pointer-events: auto !important;
 }
 
 .lobby-panel {
   max-width: 620px;
   width: 92%;
+  margin: auto;
+  flex-shrink: 0;
   background: #090d14;
   border: 2px solid #233144;
   border-radius: 12px;

@@ -414,7 +414,7 @@ async function startServer() {
               playerName: user.name,
               color: DEFAULT_PALETTES[(player.playerNumber - 1) % DEFAULT_PALETTES.length],
               isReady: false,
-              view: targetRoom.currentMission === 'LOBBY' ? 'LOBBY' : 'MISSION_CONTROL',
+              view: 'LOBBY',
               isHost: player.isMaster,
               role: player.playerNumber <= (targetRoom.activePlayerCount || 2) ? 'active' : 'spectator',
               connected: true
@@ -422,6 +422,8 @@ async function startServer() {
           } else {
             player.state.connected = true;
             player.state.playerName = user.name;
+            player.state.view = 'LOBBY';
+            player.state.isHost = player.isMaster;
           }
         } else {
           // New player joining
@@ -445,7 +447,7 @@ async function startServer() {
               playerName: user.name,
               color: payload.color || DEFAULT_PALETTES[(playerNumber - 1) % DEFAULT_PALETTES.length],
               isReady: false,
-              view: targetRoom.currentMission === 'LOBBY' ? 'LOBBY' : 'MISSION_CONTROL',
+              view: 'LOBBY',
               isHost: isMaster,
               role: playerNumber <= (targetRoom.activePlayerCount || 2) ? 'active' : 'spectator',
               connected: true
@@ -675,6 +677,11 @@ async function startServer() {
         const player = room.players.find(p => p.id === playerId);
         if (!player) return;
 
+        // Spectators cannot drive rovers
+        if (player.playerNumber > (room.activePlayerCount || 2) || (player.state && player.state.role === 'spectator')) {
+          return;
+        }
+
         const validDirections = ['up', 'down', 'left', 'right', 'boost', 'brake'];
         if (!payload.direction || !validDirections.includes(payload.direction)) return;
 
@@ -698,6 +705,10 @@ async function startServer() {
         const player = room.players.find(p => p.id === playerId);
         if (!player) return;
 
+        if (player.playerNumber > (room.activePlayerCount || 2) || (player.state && player.state.role === 'spectator')) {
+          return;
+        }
+
         if (room.bigScreenWs && room.bigScreenWs.readyState === WebSocket.OPEN) {
           sendToSocket(room.bigScreenWs, {
             type: 'ROVER_STOP',
@@ -714,6 +725,10 @@ async function startServer() {
 
         const player = room.players.find(p => p.id === playerId);
         if (!player) return;
+
+        if (player.playerNumber > (room.activePlayerCount || 2) || (player.state && player.state.role === 'spectator')) {
+          return;
+        }
 
         const rawKeys = payload.keys || {};
         const sanitizedKeys = {};
@@ -742,6 +757,10 @@ async function startServer() {
         const player = room.players.find(p => p.id === playerId);
         if (!player) return;
 
+        if (player.playerNumber > (room.activePlayerCount || 2) || (player.state && player.state.role === 'spectator')) {
+          return;
+        }
+
         player.photoMode = true;
         player.sampleMode = false;
 
@@ -762,6 +781,10 @@ async function startServer() {
         const player = room.players.find(p => p.id === playerId);
         if (!player) return;
 
+        if (player.playerNumber > (room.activePlayerCount || 2) || (player.state && player.state.role === 'spectator')) {
+          return;
+        }
+
         player.sampleMode = true;
         player.photoMode = false;
 
@@ -781,6 +804,10 @@ async function startServer() {
 
         const player = room.players.find(p => p.id === playerId);
         if (!player) return;
+
+        if (player.playerNumber > (room.activePlayerCount || 2) || (player.state && player.state.role === 'spectator')) {
+          return;
+        }
 
         const points = 1000;
         player.score += points;
@@ -815,6 +842,10 @@ async function startServer() {
 
         const player = room.players.find(p => p.id === playerId);
         if (!player) return;
+
+        if (player.playerNumber > (room.activePlayerCount || 2) || (player.state && player.state.role === 'spectator')) {
+          return;
+        }
 
         const inRange = payload.inRange !== false;
         if (!inRange) {

@@ -85,31 +85,40 @@ class MercuryScene {
     this.scene.add(this.mercuryGroup);
 
     const loader = new GLTFLoader();
-    loader.load(
-      '/mercury.glb',
-      (gltf) => {
-        const model = gltf.scene;
-        model.scale.set(7.0, 7.0, 7.0);
-        model.traverse((child) => {
-          if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-            if (child.material) {
-              child.material.roughness = 0.85;
-              child.material.metalness = 0.15;
+    const loadModel = (url, fallback) => {
+      loader.load(
+        url,
+        (gltf) => {
+          const model = gltf.scene;
+          model.scale.set(7.0, 7.0, 7.0);
+          model.traverse((child) => {
+            if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = true;
+              if (child.material) {
+                child.material.roughness = 0.85;
+                child.material.metalness = 0.15;
+              }
             }
+          });
+          this.mercuryGroup.add(model);
+          this.mercuryMesh = model;
+          console.log(`[MercuryScene]: mercury.glb model loaded successfully from ${url}.`);
+        },
+        undefined,
+        (error) => {
+          if (fallback) {
+            console.warn(`[MercuryScene]: Primary URL ${url} failed, retrying fallback: ${fallback}`);
+            loadModel(fallback, null);
+            return;
           }
-        });
-        this.mercuryGroup.add(model);
-        this.mercuryMesh = model;
-        console.log('[MercuryScene]: mercury.glb model loaded successfully.');
-      },
-      undefined,
-      (error) => {
-        console.error('[MercuryScene]: Error loading mercury.glb model, using fallback planet mesh:', error);
-        this.createFallbackMercury();
-      }
-    );
+          console.error('[MercuryScene]: Error loading mercury.glb model, using fallback planet mesh:', error);
+          this.createFallbackMercury();
+        }
+      );
+    };
+
+    loadModel('/models/mission6/mercury.glb', '/mercury.glb');
   }
 
   createFallbackMercury() {

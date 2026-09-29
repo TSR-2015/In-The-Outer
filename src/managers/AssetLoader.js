@@ -11,12 +11,12 @@ class AssetLoader {
   loadAssets(onProgress, onComplete) {
     const loader = new GLTFLoader();
     const assets = [
-      { key: 'solar_system', url: '/solar_system.glb' },
-      { key: 'parker_solar_probe', url: '/parker_solar_probe.glb' },
-      { key: 'satellite', url: '/satellite.glb' },
-      { key: 'solar_orbiter', url: '/solar_orbiter.glb' },
-      { key: 'station', url: '/Station.glb' },
-      { key: 'rocket', url: '/Rocket.glb' }
+      { key: 'solar_system', url: '/models/mission1/solar_system.glb', fallbackUrl: '/solar_system.glb' },
+      { key: 'parker_solar_probe', url: '/models/mission1/parker_solar_probe.glb', fallbackUrl: '/parker_solar_probe.glb' },
+      { key: 'satellite', url: '/models/mission1/satellite.glb', fallbackUrl: '/satellite.glb' },
+      { key: 'solar_orbiter', url: '/models/mission1/solar_orbiter.glb', fallbackUrl: '/solar_orbiter.glb' },
+      { key: 'station', url: '/models/mission2/Station.glb', fallbackUrl: '/Station.glb' },
+      { key: 'rocket', url: '/models/mission2/Rocket.glb', fallbackUrl: '/Rocket.glb' }
     ];
 
     let completed = 0;
@@ -36,42 +36,51 @@ class AssetLoader {
     };
 
     assets.forEach(asset => {
-      loader.load(
-        asset.url,
-        (gltf) => {
-          this.models[asset.key] = gltf;
-          progressMap[asset.key] = 100;
-          updateOverallProgress();
-
-          completed++;
-          if (completed === assets.length) {
-            this.normalizeSatelliteModels();
-            setTimeout(() => {
-              onComplete();
-            }, 300);
-          }
-        },
-        (xhr) => {
-          if (xhr.total > 0) {
-            const pct = (xhr.loaded / xhr.total) * 100;
-            progressMap[asset.key] = pct;
+      const loadAsset = (targetUrl, fallback) => {
+        loader.load(
+          targetUrl,
+          (gltf) => {
+            this.models[asset.key] = gltf;
+            progressMap[asset.key] = 100;
             updateOverallProgress();
-          }
-        },
-        (error) => {
-          console.error(`Error loading asset ${asset.key} (${asset.url}):`, error);
-          this.models[asset.key] = { scene: new THREE.Group(), animations: [] };
-          progressMap[asset.key] = 100;
-          updateOverallProgress();
 
-          completed++;
-          if (completed === assets.length) {
-            setTimeout(() => {
-              onComplete();
-            }, 300);
+            completed++;
+            if (completed === assets.length) {
+              this.normalizeSatelliteModels();
+              setTimeout(() => {
+                onComplete();
+              }, 300);
+            }
+          },
+          (xhr) => {
+            if (xhr.total > 0) {
+              const pct = (xhr.loaded / xhr.total) * 100;
+              progressMap[asset.key] = pct;
+              updateOverallProgress();
+            }
+          },
+          (error) => {
+            if (fallback) {
+              console.warn(`[AssetLoader] Retrying asset ${asset.key} with fallback: ${fallback}`);
+              loadAsset(fallback, null);
+              return;
+            }
+            console.error(`Error loading asset ${asset.key} (${targetUrl}):`, error);
+            this.models[asset.key] = { scene: new THREE.Group(), animations: [] };
+            progressMap[asset.key] = 100;
+            updateOverallProgress();
+
+            completed++;
+            if (completed === assets.length) {
+              setTimeout(() => {
+                onComplete();
+              }, 300);
+            }
           }
-        }
-      );
+        );
+      };
+
+      loadAsset(asset.url, asset.fallbackUrl);
     });
   }
 

@@ -88,6 +88,32 @@ html, body.controller-body {
   gap: 10px;
 }
 
+.ctrl-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #38bdf8;
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ctrl-back-btn:hover {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+}
+
+.ctrl-back-btn:active {
+  transform: scale(0.96);
+}
+
+.ctrl-back-btn.hidden {
+  display: none !important;
+}
+
 .ctrl-avatar {
   width: 38px;
   height: 38px;

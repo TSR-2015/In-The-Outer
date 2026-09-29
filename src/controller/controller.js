@@ -52,6 +52,7 @@ class PhoneController {
 
   cacheElements() {
     // Top Strip
+    this.els.btnCtrlBack = document.getElementById('btn-ctrl-back-to-lobby');
     this.els.avatar = document.getElementById('player-avatar');
     this.els.playerNameDisplay = document.getElementById('player-name-display');
     this.els.playerHostBadge = document.getElementById('player-host-badge');
@@ -88,6 +89,7 @@ class PhoneController {
     this.els.readyToggleText = document.getElementById('ready-toggle-text');
     this.els.hostControlsBlock = document.getElementById('host-controls-block');
     this.els.nonHostWaitingBlock = document.getElementById('non-host-waiting-block');
+    this.els.nonHostWaitingText = document.getElementById('non-host-waiting-text');
     this.els.btnHostLaunchMars = document.getElementById('btn-host-launch-mars');
     this.els.btnHostNavMissions = document.getElementById('btn-host-nav-missions');
     this.els.btnHostNavHome = document.getElementById('btn-host-nav-home');
@@ -181,6 +183,11 @@ class PhoneController {
     if (this.els.avatar) this.els.avatar.textContent = initials;
     if (this.els.playerNameDisplay) this.els.playerNameDisplay.textContent = s.playerName || 'PILOT LINK';
 
+    if (this.els.btnCtrlBack) {
+      const canGoBack = s.view === 'MISSION_CONTROL' || s.view === 'PAUSED' || s.view === 'RESULTS';
+      this.els.btnCtrlBack.classList.toggle('hidden', !canGoBack);
+    }
+
     if (this.els.playerHostBadge) {
       this.els.playerHostBadge.classList.toggle('hidden', !s.isHost);
     }
@@ -202,13 +209,21 @@ class PhoneController {
     if (this.els.lobbyAvatar) this.els.lobbyAvatar.textContent = initials;
     if (this.els.lobbyName) this.els.lobbyName.textContent = s.playerName || 'PILOT';
     if (this.els.lobbyStatusText) {
-      this.els.lobbyStatusText.textContent = s.isHost ? 'ROOM HOST — READY TO LAUNCH' : 'IN LOBBY';
+      if (s.isHost) {
+        this.els.lobbyStatusText.textContent = 'HOST — READY TO START ROVER MISSION';
+      } else if (s.role === 'spectator') {
+        this.els.lobbyStatusText.textContent = 'SPECTATOR — WAITING FOR NEXT ROUND';
+      } else {
+        this.els.lobbyStatusText.textContent = s.isReady ? 'PLAYER 2 // READY' : 'PLAYER 2 // WAITING FOR READY';
+      }
     }
 
     if (this.els.btnToggleReady) {
+      const showReadyBtn = !s.isHost && s.role !== 'spectator';
+      this.els.btnToggleReady.classList.toggle('hidden', !showReadyBtn);
       this.els.btnToggleReady.classList.toggle('is-ready', !!s.isReady);
       if (this.els.readyToggleText) {
-        this.els.readyToggleText.textContent = s.isReady ? 'READY TO LAUNCH' : 'SET READY';
+        this.els.readyToggleText.textContent = s.isReady ? 'READY (TAP TO CANCEL)' : 'READY';
       }
     }
 
@@ -218,6 +233,13 @@ class PhoneController {
     }
     if (this.els.nonHostWaitingBlock) {
       this.els.nonHostWaitingBlock.classList.toggle('hidden', !!s.isHost);
+      if (this.els.nonHostWaitingText) {
+        if (s.role === 'spectator') {
+          this.els.nonHostWaitingText.textContent = 'Spectator mode active. Waiting for round...';
+        } else {
+          this.els.nonHostWaitingText.textContent = 'Waiting for Host to start the Rover Mission...';
+        }
+      }
     }
 
     // 5. View 3: Mission Control (Active Driver vs Spectator)
@@ -377,11 +399,11 @@ class PhoneController {
         localStorage.setItem('in_the_outer_player_id', this.playerId);
         localStorage.setItem('in_the_outer_player_name', this.playerName);
 
-        const initialView = (player.state && player.state.view) ? player.state.view : 'LOBBY';
+        // Always restore resting view to 'LOBBY' on join/rejoin - never auto-reopens controller
         this.state = {
           ...this.state,
           ...(player.state || {}),
-          view: initialView,
+          view: 'LOBBY',
           playerName: player.name,
           isHost: !!(isHost || player.isMaster),
           connected: true,
@@ -398,9 +420,11 @@ class PhoneController {
       case 'SYNC_FULL_STATE': {
         console.log('[AirConsole Controller] Full state sync received:', msg);
         if (msg.selfState) {
+          const incomingView = (this.state.view === 'LOBBY' || !msg.selfState.view) ? 'LOBBY' : msg.selfState.view;
           this.state = {
             ...this.state,
             ...msg.selfState,
+            view: incomingView,
             isHost: msg.masterPlayerId === this.playerId,
             connected: true
           };
@@ -419,7 +443,22 @@ class PhoneController {
 
       case 'CONTROLLERS_VIEW_CHANGED': {
         console.log('[AirConsole Controller] View switched by Screen:', msg.view);
-        this.state.view = msg.view;
+        if (msg.view === 'MISSION_CONTROL') {
+          if (this.state.isHost) {
+            // When mission starts: Host remains in Host role; Player 2 goes to mobile controller
+            this.state.view = 'LOBBY';
+            if (this.els.lobbyStatusText) {
+              this.els.lobbyStatusText.textContent = 'HOSTING ROVER MISSION';
+            }
+          } else {
+            this.state.view = 'MISSION_CONTROL';
+            try {
+              window.history.pushState({ view: 'MISSION_CONTROL' }, '');
+            } catch (_) {}
+          }
+        } else {
+          this.state.view = msg.view || 'LOBBY';
+        }
         this.renderFromState();
         this.vibrate(50);
         break;
@@ -844,10 +883,35 @@ class PhoneController {
       this.els.btnResultReturn.addEventListener('pointerdown', (e) => {
         e.preventDefault();
         this.vibrate(30);
+        this.clearAllDirections();
+        this.send({ type: 'EXIT_MODES', roomId: this.roomId, playerId: this.playerId });
+        this.sendRoverStop();
         this.setState({ view: 'LOBBY', isReady: false });
       });
       this.els.btnResultReturn.addEventListener('click', (e) => e.preventDefault());
     }
+
+    // 10. Handheld Back Button to Lobby
+    if (this.els.btnCtrlBack) {
+      this.els.btnCtrlBack.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.vibrate(30);
+        this.clearAllDirections();
+        this.send({ type: 'EXIT_MODES', roomId: this.roomId, playerId: this.playerId });
+        this.sendRoverStop();
+        this.setState({ view: 'LOBBY', isReady: false });
+      });
+    }
+
+    // 11. Hardware / Browser popstate navigation safeguard
+    window.addEventListener('popstate', () => {
+      if (this.state.view === 'MISSION_CONTROL' || this.state.view === 'PAUSED' || this.state.view === 'RESULTS') {
+        this.clearAllDirections();
+        this.send({ type: 'EXIT_MODES', roomId: this.roomId, playerId: this.playerId });
+        this.sendRoverStop();
+        this.setState({ view: 'LOBBY', isReady: false });
+      }
+    });
   }
 
   calculateDirection(clientX, clientY) {
